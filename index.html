@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Main & Belajar</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --coral:#FF6B6B; --sun:#FFD166; --leaf:#06D6A0; --lavender:#B79CED;
+    --blue:#4EA8DE; --pink:#FF8FB1; --navy:#1B3A4B; --sky:#EAF6FF;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:'Baloo 2', sans-serif;
+    background:
+      radial-gradient(circle at 8% 12%, #d5ecff 0%, transparent 40%),
+      radial-gradient(circle at 92% 15%, #ffe9c7 0%, transparent 38%),
+      radial-gradient(circle at 15% 90%, #d9f7ec 0%, transparent 40%),
+      var(--sky);
+    color:var(--navy);
+    overflow-y:auto; overflow-x:hidden;
+    padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px);
+    -webkit-tap-highlight-color:transparent;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100%; gap:18px; text-align:center;
+  }
+  a{text-decoration:none; color:inherit;}
+  .hero-letters{display:flex; gap:10px;}
+  .hero-letters span{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:clamp(52px,14vw,78px); height:clamp(52px,14vw,78px);
+    border-radius:26px; font-weight:800; font-size:clamp(24px,6.5vw,36px);
+    color:#fff; box-shadow:0 8px 0 rgba(0,0,0,.08);
+    animation:bob 2.6s ease-in-out infinite;
+  }
+  .hero-letters span:nth-child(1){background:var(--coral); animation-delay:0s;}
+  .hero-letters span:nth-child(2){background:var(--sun); color:var(--navy); animation-delay:.15s;}
+  .hero-letters span:nth-child(3){background:var(--leaf); animation-delay:.3s;}
+  .hero-letters span:nth-child(4){background:var(--blue); animation-delay:.45s;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  .greet{margin:0; font-size:clamp(18px,5vw,23px); font-weight:700; color:var(--coral);}
+  h1{font-size:clamp(24px,6vw,34px); margin:0; font-weight:800;}
+  p.tag{margin:0; font-size:clamp(15px,4vw,19px); font-weight:500; color:#3f5c6b; max-width:320px;}
+
+  .game-grid{display:flex; flex-direction:column; gap:16px; width:100%; max-width:360px;}
+  .game-card{
+    background:#fff; border-radius:28px; padding:20px 24px; display:flex; align-items:center; gap:16px;
+    box-shadow:0 8px 0 #e2e8ee; transition:transform .08s; text-align:left;
+  }
+  .game-card:active{transform:translateY(5px); box-shadow:0 2px 0 #e2e8ee;}
+  .game-icon{
+    width:64px; height:64px; min-width:64px; border-radius:20px; display:flex; align-items:center;
+    justify-content:center; font-size:32px; color:#fff;
+  }
+  .game-icon.huruf{background:var(--coral);}
+  .game-icon.angka{background:var(--leaf);}
+  .game-info{display:flex; flex-direction:column; gap:2px;}
+  .game-info .name{font-weight:800; font-size:clamp(18px,5vw,21px);}
+  .game-info .desc{font-size:14px; font-weight:500; color:#5c7684;}
+  .game-info .prog{font-size:13px; font-weight:700; color:var(--navy); margin-top:2px;}
+
+  @media (prefers-reduced-motion: reduce){ .hero-letters span{animation:none;} }
+</style>
+</head>
+<body>
+
+<div class="hero-letters"><span>A</span><span>1</span><span>B</span><span>2</span></div>
+<p class="greet">Halo Kiara! 👋</p>
+<h1>Ayo Belajar dan Bermain!</h1>
+<p class="tag">Pilih permainan yang mau dimainkan yuk!</p>
+
+<div class="game-grid">
+  <a class="game-card" href="huruf.html">
+    <div class="game-icon huruf">🔤</div>
+    <div class="game-info">
+      <span class="name">Belajar Huruf</span>
+      <span class="desc">Kenali huruf A sampai Z</span>
+      <span class="prog" id="progHuruf">0 / 26 huruf</span>
+    </div>
+  </a>
+  <a class="game-card" href="angka.html">
+    <div class="game-icon angka">🔢</div>
+    <div class="game-info">
+      <span class="name">Belajar Angka</span>
+      <span class="desc">Berhitung dari 1 sampai 20</span>
+      <span class="prog" id="progAngka">0 / 20 angka</span>
+    </div>
+  </a>
+</div>
+
+<script>
+function countProgress(key){
+  try{ return (JSON.parse(localStorage.getItem(key)) || []).length; }
+  catch(e){ return 0; }
+}
+document.getElementById('progHuruf').textContent = countProgress('belajar-huruf-progress-v1') + ' / 26 huruf';
+document.getElementById('progAngka').textContent = countProgress('belajar-angka-progress-v1') + ' / 20 angka';
+</script>
+</body>
+</html>
