@@ -30,6 +30,13 @@
     min-height:100%; gap:18px; text-align:center;
   }
   a{text-decoration:none; color:inherit;}
+  .icon-btn{
+    width:52px; height:52px; border-radius:18px; background:#fff; font-size:24px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 5px 0 #dfe6ea;
+  }
+  .icon-btn:active{transform:translateY(4px); box-shadow:none;}
+  .icon-btn:focus-visible{outline:4px solid var(--navy); outline-offset:3px;}
+  .mute-btn{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:16px; z-index:20; border:none; cursor:pointer;}
   .hero-letters{display:flex; gap:10px;}
   .hero-letters span{
     display:inline-flex; align-items:center; justify-content:center;
@@ -69,6 +76,9 @@
 </head>
 <body>
 
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+<button class="icon-btn mute-btn" id="btnMute" aria-label="Suara latar belakang">🔊</button>
+
 <div class="hero-letters"><span>A</span><span>1</span><span>B</span><span>2</span></div>
 <p class="greet">Halo Kiara! 👋</p>
 <h1>Ayo Belajar dan Bermain!</h1>
@@ -100,6 +110,21 @@ function countProgress(key){
 }
 document.getElementById('progHuruf').textContent = countProgress('belajar-huruf-progress-v1') + ' / 26 huruf';
 document.getElementById('progAngka').textContent = countProgress('belajar-angka-progress-v1') + ' / 20 angka';
+
+/* ---- background music ---- */
+const bgm = document.getElementById('bgm');
+bgm.volume = 0.22;
+bgm.muted = localStorage.getItem('bgm-muted') === '1';
+function updateMuteIcon(){ document.getElementById('btnMute').textContent = bgm.muted ? '🔇' : '🔊'; }
+updateMuteIcon();
+const tryPlay = () => bgm.play().catch(() => {});
+tryPlay();
+['pointerdown', 'keydown'].forEach(evt => window.addEventListener(evt, tryPlay, { once: true }));
+document.getElementById('btnMute').addEventListener('click', () => {
+  bgm.muted = !bgm.muted;
+  localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0');
+  updateMuteIcon();
+});
 </script>
 </body>
 </html>

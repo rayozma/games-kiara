@@ -42,6 +42,7 @@
   /* ---------- HOME ---------- */
   #screen-home{justify-content:center; text-align:center; gap:16px; position:relative;}
   .home-top{position:absolute; top:calc(env(safe-area-inset-top,0px) + 14px); left:16px;}
+  .mute-btn{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:16px; z-index:20;}
   .hero-numbers{display:flex; gap:10px;}
   .hero-numbers span{
     display:inline-flex; align-items:center; justify-content:center;
@@ -148,6 +149,9 @@
 </style>
 </head>
 <body>
+
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+<button class="icon-btn mute-btn" id="btnMute" aria-label="Suara latar belakang">🔊</button>
 
 <div id="screen-home" class="screen active">
   <a class="icon-btn home-top" href="index.html" aria-label="Menu Utama">🏠</a>
@@ -257,7 +261,51 @@ function speakText(text){
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.15;
   const v = pickVoice(); if (v) u.voice = v;
+  const bgm = document.getElementById('bgm');
+  u.onstart = () => { if (bgm) bgm.volume = 0.06; };
+  u.onend = () => { if (bgm) bgm.volume = 0.22; };
   speechSynthesis.speak(u);
+}
+
+/* ---- correct-answer chime ---- */
+let sfxCtx = null;
+function playCorrectSound(){
+  try{
+    sfxCtx = sfxCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99];
+    notes.forEach((freq, i) => {
+      const osc = sfxCtx.createOscillator();
+      const gain = sfxCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = sfxCtx.currentTime + i * 0.09;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.28, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
+      osc.connect(gain); gain.connect(sfxCtx.destination);
+      osc.start(start); osc.stop(start + 0.32);
+    });
+  } catch(e){}
+}
+
+/* ---- background music ---- */
+function initBgm(){
+  const bgm = document.getElementById('bgm');
+  bgm.volume = 0.22;
+  bgm.muted = localStorage.getItem('bgm-muted') === '1';
+  updateMuteIcon();
+  const tryPlay = () => bgm.play().catch(() => {});
+  tryPlay();
+  ['pointerdown', 'keydown'].forEach(evt => window.addEventListener(evt, tryPlay, { once: true }));
+  document.getElementById('btnMute').addEventListener('click', () => {
+    bgm.muted = !bgm.muted;
+    localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0');
+    updateMuteIcon();
+  });
+}
+function updateMuteIcon(){
+  const bgm = document.getElementById('bgm');
+  document.getElementById('btnMute').textContent = bgm.muted ? '🔇' : '🔊';
 }
 
 /* ---- progress UI ---- */
@@ -337,6 +385,7 @@ function answerChallenge(btn, num){
     document.getElementById('challengeScore').textContent = '⭐ ' + challengeScore;
     markLearned(num);
     celebrate();
+    playCorrectSound();
     setTimeout(newChallengeRound, 900);
   } else {
     btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
@@ -409,6 +458,7 @@ window.addEventListener('keydown', (ev) => {
 });
 
 renderProgress();
+initBgm();
 </script>
 </body>
 </html>
