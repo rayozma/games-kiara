@@ -1,6 +1,6 @@
 # Belajar & Bermain 🎮
 
-Website game edukasi sederhana untuk anak usia 3–5 tahun, berbahasa Indonesia, lengkap dengan suara.
+First timer. Made this one for my precious. Happy playing and learning!
 
 🔗 **Live:** https://rayozma.github.io/games/
 
