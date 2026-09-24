@@ -66,6 +66,7 @@
   }
   .game-icon.huruf{background:var(--coral);}
   .game-icon.angka{background:var(--leaf);}
+  .game-icon.hewan{background:var(--lavender);}
   .game-info{display:flex; flex-direction:column; gap:2px;}
   .game-info .name{font-weight:800; font-size:clamp(18px,5vw,21px);}
   .game-info .desc{font-size:14px; font-weight:500; color:#5c7684;}
@@ -101,6 +102,14 @@
       <span class="prog" id="progAngka">0 / 20 angka</span>
     </div>
   </a>
+  <a class="game-card" href="hewan.html">
+    <div class="game-icon hewan">🐾</div>
+    <div class="game-info">
+      <span class="name">Belajar Hewan</span>
+      <span class="desc">Kenali hewan-hewan lucu</span>
+      <span class="prog" id="progHewan">0 / 20 hewan</span>
+    </div>
+  </a>
 </div>
 
 <script>
@@ -110,6 +119,7 @@ function countProgress(key){
 }
 document.getElementById('progHuruf').textContent = countProgress('belajar-huruf-progress-v1') + ' / 26 huruf';
 document.getElementById('progAngka').textContent = countProgress('belajar-angka-progress-v1') + ' / 20 angka';
+document.getElementById('progHewan').textContent = countProgress('belajar-hewan-progress-v1') + ' / 20 hewan';
 
 /* ---- background music ---- */
 const bgm = document.getElementById('bgm');
