@@ -2,7 +2,7 @@
 
 First timer. Made this one for my precious. Happy playing and learning!
 
-🔗 **Live:** https://rayozma.github.io/games-kiara
+🔗 **Live:** https://rayozma.github.io/games-kiara/
 
 ## Daftar Game
 
