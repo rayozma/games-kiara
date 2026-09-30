@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Dandan Putri</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --coral:#FF6B6B; --sun:#FFD166; --leaf:#06D6A0; --lavender:#B79CED;
+    --blue:#4EA8DE; --pink:#FF8FB1; --navy:#1B3A4B; --sky:#FFF0F6;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:'Baloo 2', sans-serif;
+    background:
+      radial-gradient(circle at 8% 12%, #ffd9ea 0%, transparent 40%),
+      radial-gradient(circle at 92% 15%, #e9ddff 0%, transparent 38%),
+      radial-gradient(circle at 15% 90%, #ffe9c7 0%, transparent 40%),
+      var(--sky);
+    color:var(--navy); overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  a{text-decoration:none; color:inherit;}
+  button{font-family:inherit; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+  button:focus-visible, .icon-btn:focus-visible{outline:4px solid var(--navy); outline-offset:3px;}
+  .screen{
+    position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
+    padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 14px);
+    animation:fadeIn .35s ease;
+  }
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0; transform:scale(.98);} to{opacity:1; transform:scale(1);}}
+
+  .icon-btn{
+    width:52px; height:52px; border-radius:18px; background:#fff; font-size:24px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 5px 0 #eedbe4;
+  }
+  .icon-btn:active{transform:translateY(4px); box-shadow:none;}
+  .home-top{position:absolute; top:calc(env(safe-area-inset-top,0px) + 14px); left:16px;}
+  .mute-btn{position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:16px; z-index:20;}
+  .topbar{width:100%; max-width:640px; display:flex; align-items:center; justify-content:space-between; padding-right:62px; margin-bottom:12px;}
+  .progress-pill{background:#fff; border-radius:999px; padding:10px 18px; font-weight:700; font-size:15px; box-shadow:0 5px 0 #eedbe4;}
+
+  /* ---------- HOME ---------- */
+  #screen-home{justify-content:center; text-align:center; gap:12px; overflow-y:auto;}
+  .home-princess{height:clamp(120px,22vh,170px); aspect-ratio:165/322; animation:bob 2.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  h1{font-size:clamp(24px,6vw,34px); margin:0; font-weight:800;}
+  p.tag{margin:0; font-size:clamp(14px,4vw,18px); font-weight:500; color:#6b5563; max-width:320px;}
+  .home-btns{display:flex; flex-direction:column; gap:11px; align-items:center;}
+  .mode-btn{
+    color:#fff; font-weight:800; font-size:clamp(17px,4.6vw,21px);
+    padding:12px 20px; border-radius:999px; transition:transform .08s; width:270px;
+  }
+  .mode-btn:active{transform:translateY(5px);}
+  .m-warna{background:var(--coral); box-shadow:0 6px 0 #d94f4f;}
+  .m-cuaca{background:var(--blue); box-shadow:0 6px 0 #3584b3;}
+  .m-nama{background:var(--leaf); box-shadow:0 6px 0 #04ab82;}
+  .m-dandan{background:var(--pink); box-shadow:0 6px 0 #d96b8f;}
+  .mode-btn:active{box-shadow:0 1px 0 rgba(0,0,0,.2);}
+  .garden{background:#ffffffb0; border-radius:24px; padding:10px 18px; display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px;}
+  .garden-flowers{display:flex; gap:2px; font-size:15px; max-width:180px; flex-wrap:wrap; justify-content:center;}
+
+  /* ---------- STAGE ---------- */
+  .stage{
+    position:relative; width:100%; max-width:360px; height:min(36vh,300px); background:#fff; border-radius:32px;
+    box-shadow:0 10px 0 #eedbe4; display:flex; align-items:center; justify-content:center; transition:background .4s; flex-shrink:0;
+  }
+  .stage.sky-hujan{background:#D6E2EE;} .stage.sky-panas{background:#FFF1C9;} .stage.sky-dingin{background:#E4F3FF;}
+  .weather-badge{position:absolute; top:8px; left:14px; font-size:clamp(38px,11vw,52px);}
+  .princess-wrap{height:92%; aspect-ratio:165/322;}
+  .princess-wrap svg, .home-princess svg{width:100%; height:100%; display:block; overflow:visible;}
+  .twirl{animation:twirl .9s ease;}
+  @keyframes twirl{0%{transform:scaleX(1);}25%{transform:scaleX(-1) translateY(-8px);}50%{transform:scaleX(1) translateY(-12px);}75%{transform:scaleX(-1) translateY(-6px);}100%{transform:scaleX(1);}}
+
+  /* ---------- PLAY ---------- */
+  #screen-play{gap:14px;}
+  .prompt-row{display:flex; align-items:center; gap:12px; background:#fff; border-radius:999px; padding:6px 8px 6px 20px; box-shadow:0 5px 0 #eedbe4;}
+  .prompt-row p{margin:0; font-weight:700; font-size:clamp(16px,4.6vw,20px);}
+  .speak-btn{
+    width:52px; height:52px; border-radius:50%; background:var(--pink); color:#fff; font-size:22px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 #d96b8f; flex-shrink:0;
+  }
+  .speak-btn:active{transform:translateY(4px); box-shadow:none;}
+  .challenge-options{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:380px;}
+  .choice-tile{
+    width:clamp(86px,25vw,108px); height:clamp(86px,25vw,108px); border-radius:26px; background:#fff; padding:12px;
+    box-shadow:0 7px 0 rgba(0,0,0,.1); transition:transform .08s;
+  }
+  .choice-tile:active{transform:translateY(5px); box-shadow:none;}
+  .choice-tile.shake{animation:shake .5s ease;}
+  .choice-tile.correct-flash{animation:pulseGood .5s ease; background:#E6FBF4;}
+  @keyframes shake{10%,90%{transform:translateX(-4px);}20%,80%{transform:translateX(6px);}30%,50%,70%{transform:translateX(-10px);}40%,60%{transform:translateX(10px);}}
+  @keyframes pulseGood{0%{transform:scale(1);}50%{transform:scale(1.15);}100%{transform:scale(1);}}
+
+  /* ---------- DRESS-UP ---------- */
+  #screen-dress{gap:10px;}
+  #screen-dress .stage{height:min(33vh,270px);}
+  .twirl-btn{background:var(--pink); color:#fff; font-weight:800; font-size:16px; padding:12px 20px; border-radius:999px; box-shadow:0 5px 0 #d96b8f;}
+  .twirl-btn:active{transform:translateY(4px); box-shadow:none;}
+  .controls{width:100%; max-width:420px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px; padding:10px 2px 20px;}
+  .ctl-row{background:#fff; border-radius:22px; padding:10px 14px; box-shadow:0 5px 0 #eedbe4;}
+  .ctl-label{font-weight:800; font-size:15px; margin-bottom:6px;}
+  .swatches{display:flex; flex-wrap:wrap; gap:9px;}
+  .swatch{width:44px; height:44px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px #eedbe4;}
+  .swatch.active{box-shadow:0 0 0 4px var(--navy);}
+  .swatch.none{background:#f3eef1; font-size:16px; color:#9a8792;}
+  .toggle{width:56px; height:56px; border-radius:16px; background:#faf5f8; padding:6px; border:3px solid transparent;}
+  .toggle.active{border-color:var(--navy); background:#fff;}
+
+  .burst{position:fixed; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:60px; opacity:0; z-index:5;}
+  .burst.show{animation:pop .9s ease forwards;}
+  @keyframes pop{0%{opacity:0; transform:scale(.4);}30%{opacity:1; transform:scale(1.15);}70%{opacity:1;}100%{opacity:0; transform:scale(1.3);}}
+  @media (prefers-reduced-motion: reduce){ .home-princess, .twirl{animation:none;} }
+</style>
+</head>
+<body>
+
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+<button class="icon-btn mute-btn" id="btnMute" aria-label="Suara latar belakang">🔊</button>
+
+<div id="screen-home" class="screen active">
+  <a class="icon-btn home-top" href="index.html" aria-label="Menu Utama">🏠</a>
+  <div class="home-princess" id="homePrincess"></div>
+  <h1>Dandan Putri</h1>
+  <p class="tag">Bantu Putri memilih baju yang cocok, yuk!</p>
+  <div class="home-btns">
+    <button class="mode-btn m-warna" data-mode="warna">Cocokkan Warna 🎨</button>
+    <button class="mode-btn m-cuaca" data-mode="cuaca">Baju Sesuai Cuaca 🌦️</button>
+    <button class="mode-btn m-nama" data-mode="nama">Nama Pakaian 👗</button>
+    <button class="mode-btn m-dandan" id="btnDandan">Dandan Bebas ✨</button>
+  </div>
+  <div class="garden">
+    <span id="homeCount">0 / 21 bintang</span>
+    <div class="garden-flowers" id="homeFlowers"></div>
+  </div>
+</div>
+
+<div id="screen-play" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" id="btnHomePlay" aria-label="Kembali">🏠</button>
+    <div class="progress-pill" id="scorePill">⭐ 0</div>
+  </div>
+  <div class="stage" id="playStage">
+    <div class="weather-badge" id="weatherBadge"></div>
+    <div class="princess-wrap" id="playPrincess"></div>
+  </div>
+  <div class="prompt-row">
+    <p id="promptText"></p>
+    <button class="speak-btn" id="btnReplay" aria-label="Dengar lagi">🔊</button>
+  </div>
+  <div class="challenge-options" id="options"></div>
+</div>
+
+<div id="screen-dress" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" id="btnHomeDress" aria-label="Kembali">🏠</button>
+    <button class="twirl-btn" id="btnTwirl">Putar ✨</button>
+  </div>
+  <div class="stage"><div class="princess-wrap" id="dressPrincess"></div></div>
+  <div class="controls" id="controls"></div>
+</div>
+
+<div class="burst" id="burst">✨</div>
+
+<script>
+const COLORS = {'merah':'#FF5A5F','biru':'#4EA8DE','kuning':'#FFD166','hijau':'#06D6A0','ungu':'#B79CED','merah muda':'#FF8FB1'};
+const NAMES = ['gaun','sepatu','mahkota','tas','kalung','topi','kacamata','payung','sepatu bot','jas hujan','syal','jaket'];
+const WEATHER = {
+  hujan:{emoji:'🌧️', say:'Hari ini hujan!', why:'supaya tidak basah', items:['payung','jas hujan','sepatu bot']},
+  panas:{emoji:'☀️', say:'Hari ini panas sekali!', why:'supaya tidak kepanasan', items:['topi','kacamata']},
+  dingin:{emoji:'❄️', say:'Hari ini dingin!', why:'supaya tetap hangat', items:['syal','jaket']}
+};
+const WHY_OVERRIDE = {kacamata:'supaya mata tidak silau'};
+const STORAGE_KEY = 'belajar-putri-progress-v1';
+const TOTAL = Object.keys(COLORS).length + NAMES.length + Object.keys(WEATHER).length;
+
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+function shuffle(arr){ for (let i = arr.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+const colorHex = c => COLORS[c] || c;
+
+/* ---- clothing icons (for answer tiles) ---- */
+const O = 'stroke="rgba(0,0,0,.18)" stroke-width="3" stroke-linejoin="round"';
+const ICON = {
+  'gaun': (c='#FF8FB1') => `<path d="M40 14 L60 14 L63 40 L86 88 Q50 96 14 88 L37 40 Z" fill="${c}" ${O}/><rect x="36" y="38" width="28" height="7" rx="3" fill="#fff" opacity=".6"/>`,
+  'sepatu': (c='#FF5A5F') => `<path d="M12 72 Q14 52 30 50 L44 50 Q50 62 70 64 Q88 66 88 76 L88 82 L12 82 Z" fill="${c}" ${O}/><circle cx="46" cy="57" r="5" fill="#fff" opacity=".75"/>`,
+  'mahkota': (c='#FFD166') => `<path d="M16 78 L20 30 L36 52 L50 20 L64 52 L80 30 L84 78 Z" fill="${c}" ${O}/><circle cx="50" cy="64" r="6" fill="#fff"/><circle cx="30" cy="68" r="4" fill="#fff" opacity=".8"/><circle cx="70" cy="68" r="4" fill="#fff" opacity=".8"/>`,
+  'tas': (c='#B79CED') => `<path d="M34 42 Q34 18 50 18 Q66 18 66 42" fill="none" stroke="${c}" stroke-width="6"/><rect x="20" y="40" width="60" height="44" rx="10" fill="${c}" ${O}/><circle cx="50" cy="57" r="5" fill="#fff" opacity=".75"/>`,
+  'kalung': () => `<path d="M22 20 Q50 80 78 20" fill="none" stroke="#FFC233" stroke-width="5"/><path d="M50 58 L61 71 L50 86 L39 71 Z" fill="#FF8FB1" ${O}/>`,
+  'topi': () => `<path d="M28 64 Q30 28 50 28 Q70 28 72 64 Z" fill="#F4D58D" ${O}/><rect x="29" y="52" width="42" height="8" fill="#FF6B6B"/><ellipse cx="50" cy="66" rx="42" ry="12" fill="#F4D58D" ${O}/>`,
+  'kacamata': () => `<rect x="10" y="38" width="34" height="24" rx="10" fill="#2B2B2B"/><rect x="56" y="38" width="34" height="24" rx="10" fill="#2B2B2B"/><path d="M44 46 Q50 41 56 46" stroke="#2B2B2B" stroke-width="4" fill="none"/><rect x="16" y="42" width="10" height="5" rx="2" fill="#fff" opacity=".35"/><rect x="62" y="42" width="10" height="5" rx="2" fill="#fff" opacity=".35"/>`,
+  'payung': () => `<path d="M10 52 Q50 2 90 52 Q80 44 70 52 Q60 44 50 52 Q40 44 30 52 Q20 44 10 52 Z" fill="#4EA8DE" ${O}/><path d="M50 52 L50 84 Q50 92 42 92 Q36 92 36 86" stroke="#1B3A4B" stroke-width="5" fill="none" stroke-linecap="round"/>`,
+  'sepatu bot': () => `<path d="M30 12 L58 12 L58 60 Q84 62 86 78 L86 88 L30 88 Z" fill="#FF6B6B" ${O}/><rect x="30" y="24" width="28" height="6" fill="#fff" opacity=".6"/>`,
+  'jas hujan': () => `<path d="M36 22 Q50 2 64 22" fill="#FFD166" ${O}/><path d="M32 20 L12 62 L22 66 L34 44 Z" fill="#FFD166" ${O}/><path d="M68 20 L88 62 L78 66 L66 44 Z" fill="#FFD166" ${O}/><path d="M32 20 Q50 14 68 20 L80 90 L20 90 Z" fill="#FFD166" ${O}/><line x1="50" y1="20" x2="50" y2="90" stroke="rgba(0,0,0,.22)" stroke-width="3"/><circle cx="56" cy="40" r="3" fill="#1B3A4B"/><circle cx="56" cy="58" r="3" fill="#1B3A4B"/><circle cx="56" cy="76" r="3" fill="#1B3A4B"/>`,
+  'syal': () => `<path d="M16 28 Q50 44 84 28 L84 44 Q50 60 16 44 Z" fill="#FF6B6B" ${O}/><rect x="58" y="44" width="16" height="44" rx="5" fill="#FF6B6B" ${O}/><line x1="58" y1="62" x2="74" y2="62" stroke="#fff" stroke-width="3"/><line x1="58" y1="72" x2="74" y2="72" stroke="#fff" stroke-width="3"/>`,
+  'jaket': () => `<path d="M30 20 L12 70 L24 74 L34 44 Z" fill="#9273C9" ${O}/><path d="M70 20 L88 70 L76 74 L66 44 Z" fill="#9273C9" ${O}/><path d="M30 18 Q50 12 70 18 L76 86 L24 86 Z" fill="#9273C9" ${O}/><line x1="50" y1="16" x2="50" y2="86" stroke="#fff" stroke-width="3" opacity=".75"/><path d="M40 16 L50 30 L60 16" fill="none" stroke="#fff" stroke-width="3" opacity=".75"/>`
+};
+const svgWrap = inner => `<svg viewBox="0 0 100 100" width="100%" height="100%">${inner}</svg>`;
+
+/* ---- princess drawing ---- */
+function base(){
+  return {dress:'merah muda', shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
+          umbrella:false, boots:false, raincoat:false, scarf:false, jacket:false};
+}
+function princessSVG(s){
+  const skin = '#F6D3B3', hair = '#6B3F2A', P = 'stroke="rgba(0,0,0,.15)" stroke-width="2" stroke-linejoin="round"';
+  const coat = s.raincoat ? '#FFD166' : s.jacket ? '#9273C9' : null;
+  const dress = colorHex(s.dress);
+  let g = '';
+  g += `<path d="M62 70 Q58 36 100 32 Q142 36 138 70 L146 142 Q100 152 54 142 Z" fill="${hair}"/>`;
+  g += `<rect x="86" y="244" width="10" height="34" rx="4" fill="${skin}"/><rect x="104" y="244" width="10" height="34" rx="4" fill="${skin}"/>`;
+  if (s.boots) g += `<rect x="81" y="252" width="18" height="33" rx="5" fill="#FF6B6B" ${P}/><rect x="101" y="252" width="18" height="33" rx="5" fill="#FF6B6B" ${P}/>`;
+  else { const sh = s.shoes ? colorHex(s.shoes) : '#FFFFFF'; g += `<ellipse cx="89" cy="280" rx="12" ry="6.5" fill="${sh}" ${P}/><ellipse cx="111" cy="280" rx="12" ry="6.5" fill="${sh}" ${P}/>`; }
+  const sleeve = coat || skin;
+  g += `<path d="M82 114 L64 172" stroke="${sleeve}" stroke-width="13" stroke-linecap="round"/><path d="M118 114 L136 172" stroke="${sleeve}" stroke-width="13" stroke-linecap="round"/>`;
+  g += `<path d="M76 146 L124 146 L160 250 Q100 262 40 250 Z" fill="${dress}" ${P}/><path d="M42 248 Q100 260 158 248" stroke="#fff" stroke-width="4" fill="none" opacity=".55"/>`;
+  g += `<path d="M80 106 Q100 100 120 106 L124 148 L76 148 Z" fill="${dress}" ${P}/><rect x="75" y="140" width="50" height="9" rx="4" fill="#fff" opacity=".65"/>`;
+  if (s.raincoat) g += `<path d="M76 104 Q100 97 124 104 L142 216 Q100 224 58 216 Z" fill="#FFD166" ${P}/><line x1="100" y1="104" x2="100" y2="220" stroke="rgba(0,0,0,.2)" stroke-width="2"/><circle cx="107" cy="130" r="3" fill="#1B3A4B"/><circle cx="107" cy="160" r="3" fill="#1B3A4B"/><circle cx="107" cy="190" r="3" fill="#1B3A4B"/>`;
+  else if (s.jacket) g += `<path d="M77 104 Q100 97 123 104 L128 170 L72 170 Z" fill="#9273C9" ${P}/><line x1="100" y1="104" x2="100" y2="170" stroke="#fff" stroke-width="2.5" opacity=".7"/>`;
+  g += `<rect x="93" y="92" width="14" height="14" rx="4" fill="${skin}"/>`;
+  if (s.necklace) g += `<path d="M88 103 Q100 118 112 103" stroke="#FFC233" stroke-width="3" fill="none"/><circle cx="100" cy="115" r="4.5" fill="#FF8FB1" ${P}/>`;
+  if (s.scarf) g += `<rect x="84" y="95" width="32" height="13" rx="6" fill="#FF6B6B" ${P}/><rect x="104" y="103" width="11" height="32" rx="4" fill="#FF6B6B" ${P}/>`;
+  g += `<circle cx="100" cy="68" r="30" fill="${skin}"/>`;
+  g += `<circle cx="89" cy="70" r="3.5" fill="#1B3A4B"/><circle cx="111" cy="70" r="3.5" fill="#1B3A4B"/>`;
+  g += `<circle cx="83" cy="80" r="5" fill="#FF8FB1" opacity=".55"/><circle cx="117" cy="80" r="5" fill="#FF8FB1" opacity=".55"/>`;
+  g += `<path d="M92 84 Q100 91 108 84" stroke="#1B3A4B" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  g += `<path d="M69 68 Q68 36 100 34 Q132 36 131 68 Q124 52 108 50 Q100 58 90 50 Q76 52 69 68 Z" fill="${hair}"/>`;
+  if (s.glasses) g += `<rect x="79" y="63" width="19" height="13" rx="5" fill="#2B2B2B"/><rect x="102" y="63" width="19" height="13" rx="5" fill="#2B2B2B"/><path d="M98 68 L102 68" stroke="#2B2B2B" stroke-width="3"/>`;
+  if (s.hat) g += `<path d="M74 44 Q76 10 100 10 Q124 10 126 44 Z" fill="#F4D58D" ${P}/><rect x="75" y="33" width="50" height="8" fill="#FF6B6B"/><ellipse cx="100" cy="45" rx="50" ry="10" fill="#F4D58D" ${P}/>`;
+  else if (s.crown) g += `<path d="M80 42 L83 16 L92 31 L100 10 L108 31 L117 16 L120 42 Z" fill="${colorHex(s.crown)}" ${P}/><circle cx="100" cy="34" r="3.5" fill="#fff"/>`;
+  if (s.bag){ const b = colorHex(s.bag); g += `<path d="M56 188 Q64 166 72 188" stroke="${b}" stroke-width="3.5" fill="none"/><rect x="49" y="185" width="30" height="23" rx="6" fill="${b}" ${P}/>`; }
+  if (s.umbrella) g += `<line x1="136" y1="176" x2="136" y2="-14" stroke="#1B3A4B" stroke-width="3.5"/><path d="M86 0 Q136 -48 186 0 Q176 -8 166 0 Q156 -8 146 0 Q136 -8 126 0 Q116 -8 106 0 Q96 -8 86 0 Z" fill="#4EA8DE" ${P}/>`;
+  g += `<circle cx="64" cy="174" r="7" fill="${skin}"/><circle cx="136" cy="174" r="7" fill="${skin}"/>`;
+  return `<svg viewBox="30 -32 165 322" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function applyItem(s, name, color){
+  switch(name){
+    case 'gaun': s.dress = color || pick(Object.keys(COLORS).filter(c => c !== s.dress)); break;
+    case 'sepatu': s.shoes = color || 'merah'; s.boots = false; break;
+    case 'mahkota': s.crown = color || 'kuning'; s.hat = false; break;
+    case 'tas': s.bag = color || 'ungu'; break;
+    case 'kalung': s.necklace = true; break;
+    case 'topi': s.hat = true; break;
+    case 'kacamata': s.glasses = true; break;
+    case 'payung': s.umbrella = true; break;
+    case 'sepatu bot': s.boots = true; break;
+    case 'jas hujan': s.raincoat = true; break;
+    case 'syal': s.scarf = true; break;
+    case 'jaket': s.jacket = true; break;
+  }
+}
+function twirl(el){ el.classList.remove('twirl'); void el.offsetWidth; el.classList.add('twirl'); }
+
+/* ---- progress ---- */
+let progress = (() => { try{ return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []); } catch(e){ return new Set(); } })();
+function markLearned(key){ progress.add(key); localStorage.setItem(STORAGE_KEY, JSON.stringify([...progress])); renderProgress(); }
+function renderProgress(){
+  document.getElementById('homeCount').textContent = progress.size + ' / ' + TOTAL + ' bintang';
+  const box = document.getElementById('homeFlowers'); box.innerHTML = '';
+  for (let i = 0; i < progress.size; i++){ const s = document.createElement('span'); s.textContent = '🌸'; box.appendChild(s); }
+}
+
+/* ---- voice ---- */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices(); }
+if ('speechSynthesis' in window){ loadVoices(); if ('onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices; }
+function pickVoice(){
+  return voices.find(v => v.lang === 'id-ID' && /female|perempuan|wanita/i.test(v.name))
+      || voices.find(v => v.lang === 'id-ID') || voices.find(v => v.lang && v.lang.startsWith('id')) || null;
+}
+function speakText(text, onEnd){
+  let done = false;
+  const bgm = document.getElementById('bgm');
+  const fin = () => { if (done) return; done = true; bgm.volume = 0.22; if (onEnd) onEnd(); };
+  if (!('speechSynthesis' in window)){ if (onEnd) setTimeout(fin, 1500); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.2;
+  const v = pickVoice(); if (v) u.voice = v;
+  u.onstart = () => { bgm.volume = 0.06; };
+  u.onend = fin; u.onerror = fin;
+  window._utter = u;
+  speechSynthesis.speak(u);
+  if (onEnd) setTimeout(fin, 6000);
+}
+
+/* ---- sound fx ---- */
+let sfxCtx = null;
+function playCorrectSound(){
+  try{
+    sfxCtx = sfxCtx || new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const osc = sfxCtx.createOscillator(), gain = sfxCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const t = sfxCtx.currentTime + i * 0.09;
+      gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.28, t + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.connect(gain); gain.connect(sfxCtx.destination); osc.start(t); osc.stop(t + 0.32);
+    });
+  } catch(e){}
+}
+function celebrate(){ const b = document.getElementById('burst'); b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
+
+/* ---- background music ---- */
+function initBgm(){
+  const bgm = document.getElementById('bgm');
+  bgm.volume = 0.22; bgm.muted = localStorage.getItem('bgm-muted') === '1';
+  const icon = () => { document.getElementById('btnMute').textContent = bgm.muted ? '🔇' : '🔊'; };
+  icon();
+  const tryPlay = () => bgm.play().catch(() => {});
+  tryPlay();
+  ['pointerdown', 'keydown'].forEach(evt => window.addEventListener(evt, tryPlay, { once: true }));
+  document.getElementById('btnMute').addEventListener('click', () => { bgm.muted = !bgm.muted; localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0'); icon(); });
+}
+
+/* ---- screens ---- */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+function goHome(){ roundId++; if ('speechSynthesis' in window) speechSynthesis.cancel(); showScreen('home'); }
+
+/* ---- challenge modes ---- */
+let mode = null, state = base(), target = null, locked = false, score = 0, roundId = 0;
+const playWrap = document.getElementById('playPrincess');
+function drawPlay(){ playWrap.innerHTML = princessSVG(state); }
+function setScene(weather){
+  document.getElementById('playStage').className = 'stage' + (weather ? ' sky-' + weather : '');
+  document.getElementById('weatherBadge').textContent = weather ? WEATHER[weather].emoji : '';
+}
+function startMode(m){
+  mode = m; score = 0;
+  document.getElementById('scorePill').textContent = '⭐ 0';
+  showScreen('play'); nextRound();
+}
+function nextRound(){
+  roundId++; locked = false;
+  if (mode === 'warna') roundColor(); else if (mode === 'cuaca') roundWeather(); else roundName();
+  drawPlay();
+  document.getElementById('promptText').textContent = target.text;
+  const my = roundId;
+  setTimeout(() => { if (my === roundId) speakText(target.say); }, 350);
+}
+function roundColor(){
+  const c = pick(Object.keys(COLORS)), t = pick(['sepatu', 'tas', 'mahkota']);
+  state = base(); state.dress = c; if (t === 'mahkota') state.crown = null;
+  setScene(null);
+  const cols = shuffle([c, ...shuffle(Object.keys(COLORS).filter(x => x !== c)).slice(0, 2)]);
+  renderOptions(cols.map(col => ({icon: ICON[t](COLORS[col]), ok: col === c, label: t + ' ' + col, apply: () => applyItem(state, t, col)})));
+  target = {say: `Gaun Putri warna ${c}. Cari ${t} warna ${c}!`, text: `Cari ${t} warna ${c}`, key: 'warna:' + c,
+            praise: `Pintar! ${cap(t)} ${c}, sama dengan gaunnya!`};
+}
+function roundWeather(){
+  const w = pick(Object.keys(WEATHER)), W = WEATHER[w];
+  state = base(); setScene(w);
+  const good = pick(W.items);
+  const bad = shuffle(Object.keys(WEATHER).filter(x => x !== w).flatMap(x => WEATHER[x].items)).slice(0, 2);
+  renderOptions(shuffle([good, ...bad]).map(n => ({icon: ICON[n](), ok: n === good, label: n, apply: () => applyItem(state, n)})));
+  target = {say: `${W.say} Putri pakai apa ya?`, text: `${W.say} Pakai apa ya?`, key: 'cuaca:' + w,
+            praise: `Pintar! Pakai ${good} ${WHY_OVERRIDE[good] || W.why}.`};
+}
+function roundName(){
+  const n = pick(NAMES);
+  state = base(); if (n === 'mahkota') state.crown = null;
+  setScene(null);
+  const opts = shuffle([n, ...shuffle(NAMES.filter(x => x !== n)).slice(0, 2)]);
+  renderOptions(opts.map(x => ({icon: ICON[x](), ok: x === n, label: x, apply: () => applyItem(state, x)})));
+  target = {say: `Cari ${n}!`, text: `Cari ${n}`, key: 'nama:' + n, praise: `Pintar! Ini ${n}.`};
+}
+function renderOptions(opts){
+  const box = document.getElementById('options'); box.innerHTML = '';
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-tile'; btn.innerHTML = svgWrap(o.icon); btn.setAttribute('aria-label', o.label);
+    btn.addEventListener('click', () => answer(btn, o));
+    box.appendChild(btn);
+  });
+}
+function answer(btn, o){
+  if (locked) return;
+  const my = roundId;
+  if (o.ok){
+    locked = true; btn.classList.add('correct-flash');
+    o.apply(); drawPlay(); twirl(playWrap);
+    score++; document.getElementById('scorePill').textContent = '⭐ ' + score;
+    markLearned(target.key); celebrate(); playCorrectSound();
+    setTimeout(() => { if (my === roundId) speakText(target.praise, () => { if (my === roundId) nextRound(); }); }, 450);
+  } else {
+    btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+    setTimeout(() => { if (my === roundId && !locked) speakText(target.say); }, 500);
+  }
+}
+
+/* ---- free dress-up ---- */
+let dressState = base();
+const dressWrap = document.getElementById('dressPrincess');
+const COLOR_ROWS = [{label:'Gaun', key:'dress', none:false}, {label:'Sepatu', key:'shoes', none:true}, {label:'Mahkota', key:'crown', none:true}, {label:'Tas', key:'bag', none:true}];
+const TOGGLES = [['kalung','necklace'], ['topi','hat'], ['kacamata','glasses'], ['payung','umbrella'], ['syal','scarf'], ['jaket','jacket'], ['jas hujan','raincoat'], ['sepatu bot','boots']];
+function drawDress(){ dressWrap.innerHTML = princessSVG(dressState); buildControls(); }
+function buildControls(){
+  const box = document.getElementById('controls'); box.innerHTML = '';
+  COLOR_ROWS.forEach(r => {
+    const row = document.createElement('div'); row.className = 'ctl-row';
+    row.innerHTML = `<div class="ctl-label">${r.label}</div>`;
+    const sw = document.createElement('div'); sw.className = 'swatches';
+    if (r.none){
+      const b = document.createElement('button');
+      b.className = 'swatch none' + (dressState[r.key] === null ? ' active' : ''); b.textContent = '✖'; b.setAttribute('aria-label', 'Tanpa ' + r.label);
+      b.addEventListener('click', () => { dressState[r.key] = null; if (r.key === 'shoes') dressState.boots = false; drawDress(); });
+      sw.appendChild(b);
+    }
+    Object.keys(COLORS).forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'swatch' + (dressState[r.key] === c ? ' active' : ''); b.style.background = COLORS[c]; b.setAttribute('aria-label', r.label + ' ' + c);
+      b.addEventListener('click', () => {
+        dressState[r.key] = c;
+        if (r.key === 'shoes') dressState.boots = false;
+        if (r.key === 'crown') dressState.hat = false;
+        drawDress(); speakText(r.label + ' ' + c);
+      });
+      sw.appendChild(b);
+    });
+    row.appendChild(sw); box.appendChild(row);
+  });
+  const row = document.createElement('div'); row.className = 'ctl-row';
+  row.innerHTML = '<div class="ctl-label">Aksesoris</div>';
+  const sw = document.createElement('div'); sw.className = 'swatches';
+  TOGGLES.forEach(([name, prop]) => {
+    const b = document.createElement('button');
+    b.className = 'toggle' + (dressState[prop] ? ' active' : ''); b.innerHTML = svgWrap(ICON[name]()); b.setAttribute('aria-label', name);
+    b.addEventListener('click', () => {
+      dressState[prop] = !dressState[prop];
+      if (prop === 'raincoat' && dressState.raincoat) dressState.jacket = false;
+      if (prop === 'jacket' && dressState.jacket) dressState.raincoat = false;
+      drawDress(); if (dressState[prop]) speakText(name);
+    });
+    sw.appendChild(b);
+  });
+  row.appendChild(sw); box.appendChild(row);
+}
+
+/* ---- wiring ---- */
+document.getElementById('homePrincess').innerHTML = princessSVG(base());
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
+document.getElementById('btnDandan').addEventListener('click', () => { showScreen('dress'); drawDress(); speakText('Ayo dandani Putri!'); });
+document.getElementById('btnHomePlay').addEventListener('click', goHome);
+document.getElementById('btnHomeDress').addEventListener('click', goHome);
+document.getElementById('btnReplay').addEventListener('click', () => { if (target && !locked) speakText(target.say); });
+document.getElementById('btnTwirl').addEventListener('click', () => { twirl(dressWrap); celebrate(); playCorrectSound(); speakText('Wah, Putri cantik sekali!'); });
+
+window.addEventListener('keydown', ev => {
+  const active = document.querySelector('.screen.active').id;
+  if (ev.key === 'Escape'){ if (active !== 'screen-home') goHome(); return; }
+  if (active === 'screen-play'){
+    if (ev.key >= '1' && ev.key <= '3'){ const b = document.querySelectorAll('.choice-tile')[Number(ev.key) - 1]; if (b) b.click(); }
+    else if (ev.key === ' ' || ev.key === 'Enter'){ ev.preventDefault(); if (target && !locked) speakText(target.say); }
+  } else if (active === 'screen-dress' && (ev.key === ' ' || ev.key === 'Enter')){
+    ev.preventDefault(); document.getElementById('btnTwirl').click();
+  }
+});
+
+renderProgress();
+initBgm();
+</script>
+</body>
+</html>
