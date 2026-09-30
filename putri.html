@@ -274,20 +274,34 @@ function pickVoice(){
   return voices.find(v => v.lang === 'id-ID' && /female|perempuan|wanita/i.test(v.name))
       || voices.find(v => v.lang === 'id-ID') || voices.find(v => v.lang && v.lang.startsWith('id')) || null;
 }
-function speakText(text, onEnd){
-  let done = false;
-  const bgm = document.getElementById('bgm');
-  const fin = () => { if (done) return; done = true; bgm.volume = 0.22; if (onEnd) onEnd(); };
-  if (!('speechSynthesis' in window)){ if (onEnd) setTimeout(fin, 1500); return; }
+let currentClip = null;
+function browserSpeak(text, fin){
+  if (!('speechSynthesis' in window)){ setTimeout(fin, 1500); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.2;
+  u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.15;
   const v = pickVoice(); if (v) u.voice = v;
-  u.onstart = () => { bgm.volume = 0.06; };
+  const bgm = document.getElementById('bgm');
+  u.onstart = () => { if (bgm) bgm.volume = 0.06; };
   u.onend = fin; u.onerror = fin;
   window._utter = u;
   speechSynthesis.speak(u);
-  if (onEnd) setTimeout(fin, 6000);
+}
+function speakText(text, onEnd){
+  let done = false, fellBack = false;
+  const bgm = document.getElementById('bgm');
+  const fin = () => { if (done) return; done = true; if (bgm) bgm.volume = 0.22; if (onEnd) onEnd(); };
+  if (currentClip){ currentClip.onended = null; currentClip.onerror = null; currentClip.pause(); }
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const clip = new Audio('audio/' + slug + '.mp3');
+  currentClip = clip;
+  const fallback = () => { if (fellBack || currentClip !== clip) return; fellBack = true; browserSpeak(text, fin); };
+  clip.onplaying = () => { if (bgm) bgm.volume = 0.06; };
+  clip.onended = fin;
+  clip.onerror = fallback;
+  clip.play().catch(fallback);
+  if (onEnd) setTimeout(fin, 8000);
 }
 
 /* ---- sound fx ---- */
