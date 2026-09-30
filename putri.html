@@ -117,6 +117,62 @@
   .burst.show{animation:pop .9s ease forwards;}
   @keyframes pop{0%{opacity:0; transform:scale(.4);}30%{opacity:1; transform:scale(1.15);}70%{opacity:1;}100%{opacity:0; transform:scale(1.3);}}
   @media (prefers-reduced-motion: reduce){ .home-princess, .twirl{animation:none;} }
+
+  /* ===== device tuning ===== */
+  html{touch-action:manipulation;}
+  body{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  .mute-btn{right:calc(env(safe-area-inset-right,0px) + 16px);}
+  .home-top, .practice-top{left:calc(env(safe-area-inset-left,0px) + 16px);}
+  .screen{padding-left:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right));}
+  #screen-home{justify-content:safe center;}
+  .stage{height:min(36dvh,300px);}
+  #screen-dress .stage{height:min(33dvh,270px);}
+  .swatches{gap:7px;}
+  .swatch{width:clamp(34px,9.5vw,44px); height:clamp(34px,9.5vw,44px);}
+  @media (orientation: landscape) and (max-height: 520px){
+    .screen{padding-top:calc(env(safe-area-inset-top,0px) + 10px); padding-bottom:10px;}
+    #screen-home{gap:6px;}
+    .home-princess{height:30vh;}
+    #screen-home .tag{display:none;}
+    h1{font-size:24px;}
+    .home-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+    .mode-btn{width:240px; padding:9px 14px; font-size:16px;}
+    .garden{padding:5px 14px;}
+    #screen-play.active{display:grid; grid-template-columns:minmax(0,40%) 1fr; grid-template-rows:auto auto 1fr; column-gap:20px; row-gap:10px; justify-items:center; align-items:start;}
+    #screen-play .topbar, #screen-dress .topbar{grid-column:1 / -1; max-width:none; margin-bottom:0;}
+    #playStage{grid-column:1; grid-row:2 / 4; max-width:none; height:calc(100vh - 96px); height:calc(100dvh - 96px);}
+    .prompt-row{grid-column:2; grid-row:2; align-self:end;}
+    #options{grid-column:2; grid-row:3; flex-wrap:nowrap; max-width:none;}
+    .choice-tile{width:clamp(72px,24vh,100px); height:clamp(72px,24vh,100px); padding:10px;}
+    #screen-dress.active{display:grid; grid-template-columns:minmax(0,36%) 1fr; grid-template-rows:auto 1fr; column-gap:20px; row-gap:8px;}
+    #screen-dress .stage{grid-column:1; grid-row:2; max-width:none; height:calc(100vh - 96px); height:calc(100dvh - 96px);}
+    .controls{grid-column:2; grid-row:2; min-height:0; max-width:none; padding-top:0; height:calc(100vh - 96px); height:calc(100dvh - 96px);}
+  }
+  @media (min-width: 700px) and (min-height: 700px){
+    .icon-btn{width:64px; height:64px; font-size:30px; border-radius:22px;}
+    .topbar{max-width:900px; padding-right:78px;}
+    .progress-pill{font-size:19px; padding:12px 24px;}
+    .home-princess{height:28vh; max-height:300px;}
+    h1{font-size:46px;} p.tag{font-size:22px; max-width:460px;}
+    .mode-btn{width:380px; font-size:24px; padding:16px 24px;}
+    .garden{font-size:18px; padding:14px 26px;}
+    .stage{max-width:520px; height:min(44vh,480px); height:min(44dvh,480px);}
+    #screen-play{gap:22px;}
+    .prompt-row{padding:8px 10px 8px 26px;} .prompt-row p{font-size:26px;}
+    .speak-btn{width:68px; height:68px; font-size:30px;}
+    .challenge-options{max-width:640px; gap:24px;}
+    .choice-tile{width:150px; height:150px; padding:18px; border-radius:34px;}
+    #screen-dress .stage{height:min(40vh,420px); height:min(40dvh,420px);}
+    .controls{max-width:600px;} .ctl-label{font-size:19px;}
+    .swatches{gap:10px;} .swatch{width:56px; height:56px;} .toggle{width:72px; height:72px;}
+    .twirl-btn{font-size:22px; padding:14px 28px;}
+  }
+  .ctl-row{padding:10px 10px;}
+  .swatches{display:grid; grid-template-columns:repeat(7, minmax(0,46px)); gap:6px;}
+  .swatch{width:100%; height:auto; aspect-ratio:1;}
+  .toggles{display:flex; flex-wrap:wrap; gap:8px;}
+  @media (orientation: landscape) and (max-height: 520px){ .mode-btn{padding:11px 14px;} }
+  @media (min-width: 700px) and (min-height: 700px){ .swatches{grid-template-columns:repeat(7, 56px); gap:10px;} .swatch{width:56px; height:56px;} .ctl-row{padding:12px 16px;} }
 </style>
 </head>
 <body>
@@ -274,33 +330,46 @@ function pickVoice(){
   return voices.find(v => v.lang === 'id-ID' && /female|perempuan|wanita/i.test(v.name))
       || voices.find(v => v.lang === 'id-ID') || voices.find(v => v.lang && v.lang.startsWith('id')) || null;
 }
-let currentClip = null;
+
+let bgmGain = null, bgmLevel = 0.22;
+const VOLUME_WORKS = (() => { try{ const a = new Audio(); a.volume = 0.5; return a.volume === 0.5; } catch(e){ return true; } })();
+function setBgmVol(v){
+  bgmLevel = v;
+  const bgm = document.getElementById('bgm'); if (!bgm) return;
+  if (bgmGain) bgmGain.gain.value = bgm.muted ? 0 : v; else bgm.volume = v;
+}
+const SILENT = 'data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+const voiceEl = new Audio(); voiceEl.preload = 'auto';
+let voiceToken = 0;
 function browserSpeak(text, fin){
   if (!('speechSynthesis' in window)){ setTimeout(fin, 1500); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.15;
   const v = pickVoice(); if (v) u.voice = v;
-  const bgm = document.getElementById('bgm');
-  u.onstart = () => { if (bgm) bgm.volume = 0.06; };
+  u.onstart = () => setBgmVol(0.06);
   u.onend = fin; u.onerror = fin;
   window._utter = u;
   speechSynthesis.speak(u);
 }
-function speakText(text, onEnd){
-  let done = false, fellBack = false;
-  const bgm = document.getElementById('bgm');
-  const fin = () => { if (done) return; done = true; if (bgm) bgm.volume = 0.22; if (onEnd) onEnd(); };
-  if (currentClip){ currentClip.onended = null; currentClip.onerror = null; currentClip.pause(); }
+function stopVoice(){
+  voiceToken++; voiceEl.pause();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
+  setBgmVol(0.22);
+}
+function speakText(text, onEnd){
+  const token = ++voiceToken;
+  let done = false, fellBack = false;
+  const fin = () => { if (done) return; done = true; setBgmVol(0.22); if (onEnd) onEnd(); };
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  voiceEl.pause();
   const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const clip = new Audio('audio/' + slug + '.mp3');
-  currentClip = clip;
-  const fallback = () => { if (fellBack || currentClip !== clip) return; fellBack = true; browserSpeak(text, fin); };
-  clip.onplaying = () => { if (bgm) bgm.volume = 0.06; };
-  clip.onended = fin;
-  clip.onerror = fallback;
-  clip.play().catch(fallback);
+  const fallback = () => { if (fellBack || token !== voiceToken) return; fellBack = true; browserSpeak(text, fin); };
+  voiceEl.onplaying = () => { if (token === voiceToken) setBgmVol(0.06); };
+  voiceEl.onended = () => { if (token === voiceToken) fin(); };
+  voiceEl.onerror = fallback;
+  voiceEl.src = 'audio/' + slug + '.mp3';
+  voiceEl.play().catch(err => { if (err && err.name === 'AbortError') return; fallback(); });
   if (onEnd) setTimeout(fin, 8000);
 }
 
@@ -323,13 +392,33 @@ function celebrate(){ const b = document.getElementById('burst'); b.classList.re
 /* ---- background music ---- */
 function initBgm(){
   const bgm = document.getElementById('bgm');
-  bgm.volume = 0.22; bgm.muted = localStorage.getItem('bgm-muted') === '1';
-  const icon = () => { document.getElementById('btnMute').textContent = bgm.muted ? '🔇' : '🔊'; };
+  const btn = document.getElementById('btnMute');
+  bgm.muted = localStorage.getItem('bgm-muted') === '1';
+  bgm.volume = bgmLevel;
+  const icon = () => { btn.textContent = bgm.muted ? '🔇' : '🔊'; };
   icon();
-  const tryPlay = () => bgm.play().catch(() => {});
-  tryPlay();
-  ['pointerdown', 'keydown'].forEach(evt => window.addEventListener(evt, tryPlay, { once: true }));
-  document.getElementById('btnMute').addEventListener('click', () => { bgm.muted = !bgm.muted; localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0'); icon(); });
+  const unlock = () => {
+    try{
+      if (typeof sfxCtx !== 'undefined'){
+        sfxCtx = sfxCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (!VOLUME_WORKS && !bgmGain && location.protocol.startsWith('http')){
+          const src = sfxCtx.createMediaElementSource(bgm);
+          bgmGain = sfxCtx.createGain(); src.connect(bgmGain); bgmGain.connect(sfxCtx.destination);
+          bgm.volume = 1; setBgmVol(bgmLevel);
+        }
+        if (sfxCtx.state === 'suspended') sfxCtx.resume();
+      }
+    } catch(e){}
+    bgm.play().catch(() => {});
+    if (typeof voiceEl !== 'undefined' && !voiceEl.getAttribute('src')){ voiceEl.src = SILENT; voiceEl.play().catch(() => {}); }
+  };
+  bgm.play().catch(() => {});
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(evt => window.addEventListener(evt, unlock, { once: true }));
+  btn.addEventListener('click', () => {
+    bgm.muted = !bgm.muted;
+    localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0');
+    icon(); setBgmVol(bgmLevel);
+  });
 }
 
 /* ---- screens ---- */
@@ -337,7 +426,7 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
 }
-function goHome(){ roundId++; if ('speechSynthesis' in window) speechSynthesis.cancel(); showScreen('home'); }
+function goHome(){ roundId++; stopVoice(); showScreen('home'); }
 
 /* ---- challenge modes ---- */
 let mode = null, state = base(), target = null, locked = false, score = 0, roundId = 0;
@@ -443,7 +532,7 @@ function buildControls(){
   });
   const row = document.createElement('div'); row.className = 'ctl-row';
   row.innerHTML = '<div class="ctl-label">Aksesoris</div>';
-  const sw = document.createElement('div'); sw.className = 'swatches';
+  const sw = document.createElement('div'); sw.className = 'toggles';
   TOGGLES.forEach(([name, prop]) => {
     const b = document.createElement('button');
     b.className = 'toggle' + (dressState[prop] ? ' active' : ''); b.innerHTML = svgWrap(ICON[name]()); b.setAttribute('aria-label', name);

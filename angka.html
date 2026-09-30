@@ -146,6 +146,64 @@
   @keyframes pop{0%{opacity:0; transform:scale(.4);}30%{opacity:1; transform:scale(1.15);}70%{opacity:1;}100%{opacity:0; transform:scale(1.3);}}
 
   @media (prefers-reduced-motion: reduce){ .hero-numbers span{animation:none;} }
+
+  /* ===== device tuning ===== */
+  html{touch-action:manipulation;}
+  body{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  .mute-btn{right:calc(env(safe-area-inset-right,0px) + 16px);}
+  .home-top, .practice-top{left:calc(env(safe-area-inset-left,0px) + 16px);}
+  .screen{overflow-y:auto; padding-left:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right));}
+  #screen-home, #screen-practice{position:fixed; justify-content:safe center;}
+  #screen-practice{padding-top:calc(env(safe-area-inset-top,0px) + 76px);}
+  .grid{flex:1; min-height:0; align-content:start;}
+
+  @media (orientation: landscape) and (max-height: 520px){
+    .screen{padding-top:calc(env(safe-area-inset-top,0px) + 10px); padding-bottom:10px;}
+    #screen-home{gap:8px;}
+    #screen-home .tag{display:none;}
+    .hero-letters span, .hero-numbers span, .hero-animals span{width:46px; height:46px; border-radius:16px; font-size:24px;}
+    h1{font-size:24px;}
+    .home-btns{flex-direction:row;}
+    .btn-start, .btn-secondary{width:auto; padding:12px 26px; font-size:18px;}
+    .garden{padding:6px 16px;}
+    #screen-practice{flex-direction:row; gap:28px; padding-top:calc(env(safe-area-inset-top,0px) + 10px);}
+    .practice-card{padding:14px 30px; gap:4px; width:auto; min-width:260px;}
+    .big-letters .up{font-size:28vh;} .big-letters .low{font-size:17vh;}
+    .big-number{font-size:26vh;} .emoji{font-size:15vh;} .big-emoji{font-size:32vh;}
+    .word{font-size:22px;}
+    .count-wrap{max-width:380px; font-size:18px;}
+    .speak-btn{width:52px; height:52px; font-size:22px;}
+    .nav-row{flex-direction:column; gap:14px;}
+    #screen-challenge{flex-direction:row; flex-wrap:wrap; justify-content:center; align-content:flex-start; column-gap:28px; row-gap:10px;}
+    #screen-challenge .topbar{flex-basis:100%; max-width:none; margin-bottom:0;}
+    .challenge-prompt{margin-top:0; padding:12px 22px; gap:6px;}
+    .challenge-prompt .glyph{font-size:28px;}
+    .challenge-options{flex-wrap:nowrap; max-width:none; align-self:center;}
+    .choice-tile{width:clamp(76px,24vh,100px); height:clamp(76px,24vh,100px);}
+  }
+
+  @media (min-width: 700px) and (min-height: 700px){
+    .icon-btn{width:64px; height:64px; font-size:30px; border-radius:22px;}
+    .topbar{max-width:900px; padding-right:78px;}
+    .progress-pill{font-size:19px; padding:12px 24px;}
+    #screen-practice{padding-top:calc(env(safe-area-inset-top,0px) + 90px);}
+    .hero-letters span, .hero-numbers span, .hero-animals span{width:96px; height:96px; border-radius:30px; font-size:48px;}
+    h1{font-size:46px;} p.tag{font-size:22px; max-width:460px;}
+    .btn-start, .btn-secondary{width:360px; font-size:28px; padding:20px 42px;}
+    .garden{font-size:18px; padding:14px 26px;} .garden-flowers{font-size:20px; max-width:320px;}
+    .practice-card{max-width:500px; padding:36px 48px; gap:14px;}
+    .big-letters .up{font-size:170px;} .big-letters .low{font-size:100px;}
+    .big-number{font-size:160px;} .emoji{font-size:96px;} .big-emoji{font-size:180px;}
+    .word{font-size:38px;} .count-wrap{max-width:420px; font-size:30px;}
+    .speak-btn{width:84px; height:84px; font-size:36px;}
+    .arrow-btn{width:76px; height:76px; font-size:32px; border-radius:24px;}
+    .grid{max-width:900px; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:16px;}
+    .tile{font-size:40px; border-radius:28px;}
+    #screen-challenge{gap:40px;}
+    .challenge-prompt{padding:30px 48px; gap:14px;} .challenge-prompt p{font-size:28px;} .challenge-prompt .glyph{font-size:60px;}
+    .challenge-options{max-width:640px; gap:26px;}
+    .choice-tile{width:160px; height:160px; font-size:60px; border-radius:36px;}
+  }
 </style>
 </head>
 <body>
@@ -247,41 +305,53 @@ function shuffle(arr){
 /* ---- voice ---- */
 let voices = [];
 function loadVoices(){ voices = speechSynthesis.getVoices(); }
-loadVoices();
-if ('onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices;
+if ('speechSynthesis' in window){ loadVoices(); if ('onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged = loadVoices; }
 function pickVoice(){
   return voices.find(v => v.lang === 'id-ID' && /female|perempuan|wanita/i.test(v.name))
       || voices.find(v => v.lang === 'id-ID')
       || voices.find(v => v.lang && v.lang.startsWith('id'))
       || null;
 }
-let currentClip = null;
+
+let bgmGain = null, bgmLevel = 0.22;
+const VOLUME_WORKS = (() => { try{ const a = new Audio(); a.volume = 0.5; return a.volume === 0.5; } catch(e){ return true; } })();
+function setBgmVol(v){
+  bgmLevel = v;
+  const bgm = document.getElementById('bgm'); if (!bgm) return;
+  if (bgmGain) bgmGain.gain.value = bgm.muted ? 0 : v; else bgm.volume = v;
+}
+const SILENT = 'data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+const voiceEl = new Audio(); voiceEl.preload = 'auto';
+let voiceToken = 0;
 function browserSpeak(text, fin){
   if (!('speechSynthesis' in window)){ setTimeout(fin, 1500); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.15;
   const v = pickVoice(); if (v) u.voice = v;
-  const bgm = document.getElementById('bgm');
-  u.onstart = () => { if (bgm) bgm.volume = 0.06; };
+  u.onstart = () => setBgmVol(0.06);
   u.onend = fin; u.onerror = fin;
   window._utter = u;
   speechSynthesis.speak(u);
 }
-function speakText(text, onEnd){
-  let done = false, fellBack = false;
-  const bgm = document.getElementById('bgm');
-  const fin = () => { if (done) return; done = true; if (bgm) bgm.volume = 0.22; if (onEnd) onEnd(); };
-  if (currentClip){ currentClip.onended = null; currentClip.onerror = null; currentClip.pause(); }
+function stopVoice(){
+  voiceToken++; voiceEl.pause();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
+  setBgmVol(0.22);
+}
+function speakText(text, onEnd){
+  const token = ++voiceToken;
+  let done = false, fellBack = false;
+  const fin = () => { if (done) return; done = true; setBgmVol(0.22); if (onEnd) onEnd(); };
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  voiceEl.pause();
   const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const clip = new Audio('audio/' + slug + '.mp3');
-  currentClip = clip;
-  const fallback = () => { if (fellBack || currentClip !== clip) return; fellBack = true; browserSpeak(text, fin); };
-  clip.onplaying = () => { if (bgm) bgm.volume = 0.06; };
-  clip.onended = fin;
-  clip.onerror = fallback;
-  clip.play().catch(fallback);
+  const fallback = () => { if (fellBack || token !== voiceToken) return; fellBack = true; browserSpeak(text, fin); };
+  voiceEl.onplaying = () => { if (token === voiceToken) setBgmVol(0.06); };
+  voiceEl.onended = () => { if (token === voiceToken) fin(); };
+  voiceEl.onerror = fallback;
+  voiceEl.src = 'audio/' + slug + '.mp3';
+  voiceEl.play().catch(err => { if (err && err.name === 'AbortError') return; fallback(); });
   if (onEnd) setTimeout(fin, 8000);
 }
 
@@ -309,22 +379,35 @@ function playCorrectSound(){
 /* ---- background music ---- */
 function initBgm(){
   const bgm = document.getElementById('bgm');
-  bgm.volume = 0.22;
+  const btn = document.getElementById('btnMute');
   bgm.muted = localStorage.getItem('bgm-muted') === '1';
-  updateMuteIcon();
-  const tryPlay = () => bgm.play().catch(() => {});
-  tryPlay();
-  ['pointerdown', 'keydown'].forEach(evt => window.addEventListener(evt, tryPlay, { once: true }));
-  document.getElementById('btnMute').addEventListener('click', () => {
+  bgm.volume = bgmLevel;
+  const icon = () => { btn.textContent = bgm.muted ? '🔇' : '🔊'; };
+  icon();
+  const unlock = () => {
+    try{
+      if (typeof sfxCtx !== 'undefined'){
+        sfxCtx = sfxCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (!VOLUME_WORKS && !bgmGain && location.protocol.startsWith('http')){
+          const src = sfxCtx.createMediaElementSource(bgm);
+          bgmGain = sfxCtx.createGain(); src.connect(bgmGain); bgmGain.connect(sfxCtx.destination);
+          bgm.volume = 1; setBgmVol(bgmLevel);
+        }
+        if (sfxCtx.state === 'suspended') sfxCtx.resume();
+      }
+    } catch(e){}
+    bgm.play().catch(() => {});
+    if (typeof voiceEl !== 'undefined' && !voiceEl.getAttribute('src')){ voiceEl.src = SILENT; voiceEl.play().catch(() => {}); }
+  };
+  bgm.play().catch(() => {});
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(evt => window.addEventListener(evt, unlock, { once: true }));
+  btn.addEventListener('click', () => {
     bgm.muted = !bgm.muted;
     localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0');
-    updateMuteIcon();
+    icon(); setBgmVol(bgmLevel);
   });
 }
-function updateMuteIcon(){
-  const bgm = document.getElementById('bgm');
-  document.getElementById('btnMute').textContent = bgm.muted ? '🔇' : '🔊';
-}
+
 
 /* ---- progress UI ---- */
 function renderProgress(){
@@ -422,7 +505,7 @@ document.getElementById('btnStart').addEventListener('click', () => showScreen('
 document.getElementById('btnChallenge').addEventListener('click', startChallenge);
 document.getElementById('btnHomeFromShelf').addEventListener('click', () => showScreen('home'));
 document.getElementById('btnHomeFromPractice').addEventListener('click', () => showScreen('shelf'));
-document.getElementById('btnHomeFromChallenge').addEventListener('click', () => { speechSynthesis.cancel(); showScreen('home'); });
+document.getElementById('btnHomeFromChallenge').addEventListener('click', () => { stopVoice(); showScreen('home'); });
 document.getElementById('btnSpeak').addEventListener('click', () => { speakText(DATA[currentIndex].w); });
 document.getElementById('btnChallengeReplay').addEventListener('click', () => {
   if (currentChallenge) speakText('Cari angka ' + currentChallenge);
@@ -450,7 +533,7 @@ window.addEventListener('keydown', (ev) => {
       ev.preventDefault();
       if (currentChallenge) speakText('Cari angka ' + currentChallenge);
     } else if (key === 'Escape' || key === 'Backspace'){
-      speechSynthesis.cancel(); showScreen('home');
+      stopVoice(); showScreen('home');
     }
     return;
   }

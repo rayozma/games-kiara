@@ -74,6 +74,30 @@
   .game-info .prog{font-size:13px; font-weight:700; color:var(--navy); margin-top:2px;}
 
   @media (prefers-reduced-motion: reduce){ .hero-letters span{animation:none;} }
+
+  /* ===== device tuning ===== */
+  html{touch-action:manipulation;}
+  body{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  .mute-btn{right:calc(env(safe-area-inset-right,0px) + 16px);}
+  .home-top, .practice-top{left:calc(env(safe-area-inset-left,0px) + 16px);}
+  body{height:auto; min-height:100%; padding-top:calc(env(safe-area-inset-top,0px) + 20px); padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px);
+       padding-left:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right));}
+  @media (min-width: 640px){ .game-grid{display:grid; grid-template-columns:1fr 1fr; max-width:720px;} }
+  @media (orientation: landscape) and (max-height: 520px){
+    body{gap:8px;}
+    .hero-letters span{width:44px; height:44px; border-radius:15px; font-size:22px;}
+    h1{font-size:24px;} p.tag{display:none;}
+    .game-card{padding:12px 18px;} .game-icon{width:52px; height:52px; min-width:52px; font-size:26px;}
+  }
+  @media (min-width: 700px) and (min-height: 700px){
+    .icon-btn{width:64px; height:64px; font-size:30px; border-radius:22px;}
+    .hero-letters span{width:90px; height:90px; border-radius:28px; font-size:44px;}
+    .greet{font-size:28px;} h1{font-size:46px;} p.tag{font-size:22px; max-width:460px;}
+    .game-grid{max-width:780px; gap:22px;}
+    .game-card{padding:26px 28px; gap:20px;}
+    .game-icon{width:80px; height:80px; min-width:80px; font-size:40px; border-radius:24px;}
+    .game-info .name{font-size:25px;} .game-info .desc{font-size:17px;} .game-info .prog{font-size:15px;}
+  }
 </style>
 </head>
 <body>
@@ -132,19 +156,45 @@ document.getElementById('progHewan').textContent = countProgress('belajar-hewan-
 document.getElementById('progPutri').textContent = countProgress('belajar-putri-progress-v1') + ' / 21 bintang';
 
 /* ---- background music ---- */
-const bgm = document.getElementById('bgm');
-bgm.volume = 0.22;
-bgm.muted = localStorage.getItem('bgm-muted') === '1';
-function updateMuteIcon(){ document.getElementById('btnMute').textContent = bgm.muted ? '🔇' : '🔊'; }
-updateMuteIcon();
-const tryPlay = () => bgm.play().catch(() => {});
-tryPlay();
-['pointerdown', 'keydown'].forEach(evt => window.addEventListener(evt, tryPlay, { once: true }));
-document.getElementById('btnMute').addEventListener('click', () => {
-  bgm.muted = !bgm.muted;
-  localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0');
-  updateMuteIcon();
-});
+let sfxCtx = null;
+let bgmGain = null, bgmLevel = 0.22;
+const VOLUME_WORKS = (() => { try{ const a = new Audio(); a.volume = 0.5; return a.volume === 0.5; } catch(e){ return true; } })();
+function setBgmVol(v){
+  bgmLevel = v;
+  const bgm = document.getElementById('bgm'); if (!bgm) return;
+  if (bgmGain) bgmGain.gain.value = bgm.muted ? 0 : v; else bgm.volume = v;
+}
+function initBgm(){
+  const bgm = document.getElementById('bgm');
+  const btn = document.getElementById('btnMute');
+  bgm.muted = localStorage.getItem('bgm-muted') === '1';
+  bgm.volume = bgmLevel;
+  const icon = () => { btn.textContent = bgm.muted ? '🔇' : '🔊'; };
+  icon();
+  const unlock = () => {
+    try{
+      if (typeof sfxCtx !== 'undefined'){
+        sfxCtx = sfxCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (!VOLUME_WORKS && !bgmGain && location.protocol.startsWith('http')){
+          const src = sfxCtx.createMediaElementSource(bgm);
+          bgmGain = sfxCtx.createGain(); src.connect(bgmGain); bgmGain.connect(sfxCtx.destination);
+          bgm.volume = 1; setBgmVol(bgmLevel);
+        }
+        if (sfxCtx.state === 'suspended') sfxCtx.resume();
+      }
+    } catch(e){}
+    bgm.play().catch(() => {});
+    if (typeof voiceEl !== 'undefined' && !voiceEl.getAttribute('src')){ voiceEl.src = SILENT; voiceEl.play().catch(() => {}); }
+  };
+  bgm.play().catch(() => {});
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(evt => window.addEventListener(evt, unlock, { once: true }));
+  btn.addEventListener('click', () => {
+    bgm.muted = !bgm.muted;
+    localStorage.setItem('bgm-muted', bgm.muted ? '1' : '0');
+    icon(); setBgmVol(bgmLevel);
+  });
+}
+initBgm();
 </script>
 </body>
 </html>
