@@ -303,7 +303,7 @@ function pickVoice(){
       || null;
 }
 
-let bgmGain = null, bgmLevel = 0.22;
+let bgmGain = null, bgmLevel = 0.11;
 const VOLUME_WORKS = (() => { try{ const a = new Audio(); a.volume = 0.5; return a.volume === 0.5; } catch(e){ return true; } })();
 function setBgmVol(v){
   bgmLevel = v;
@@ -319,7 +319,7 @@ function browserSpeak(text, fin){
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; u.rate = 0.82; u.pitch = 1.15;
   const v = pickVoice(); if (v) u.voice = v;
-  u.onstart = () => setBgmVol(0.06);
+  u.onstart = () => setBgmVol(0.03);
   u.onend = fin; u.onerror = fin;
   window._utter = u;
   speechSynthesis.speak(u);
@@ -327,17 +327,17 @@ function browserSpeak(text, fin){
 function stopVoice(){
   voiceToken++; voiceEl.pause();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
-  setBgmVol(0.22);
+  setBgmVol(0.11);
 }
 function speakText(text, onEnd){
   const token = ++voiceToken;
   let done = false, fellBack = false;
-  const fin = () => { if (done) return; done = true; setBgmVol(0.22); if (onEnd) onEnd(); };
+  const fin = () => { if (done) return; done = true; setBgmVol(0.11); if (onEnd) onEnd(); };
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   voiceEl.pause();
   const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const fallback = () => { if (fellBack || token !== voiceToken) return; fellBack = true; browserSpeak(text, fin); };
-  voiceEl.onplaying = () => { if (token === voiceToken) setBgmVol(0.06); };
+  voiceEl.onplaying = () => { if (token === voiceToken) setBgmVol(0.03); };
   voiceEl.onended = () => { if (token === voiceToken) fin(); };
   voiceEl.onerror = fallback;
   voiceEl.src = 'audio/' + slug + '.mp3';

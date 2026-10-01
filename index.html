@@ -157,7 +157,7 @@ document.getElementById('progPutri').textContent = countProgress('belajar-putri-
 
 /* ---- background music ---- */
 let sfxCtx = null;
-let bgmGain = null, bgmLevel = 0.22;
+let bgmGain = null, bgmLevel = 0.11;
 const VOLUME_WORKS = (() => { try{ const a = new Audio(); a.volume = 0.5; return a.volume === 0.5; } catch(e){ return true; } })();
 function setBgmVol(v){
   bgmLevel = v;
