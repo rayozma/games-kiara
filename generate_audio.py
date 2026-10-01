@@ -1,5 +1,5 @@
 import os, re, sys, json, time, getpass, urllib.request, urllib.error
-VOICE_ID = "d15jrIAARvF899pDoC6T"
+VOICE_ID = "JaUVfDrFcfwGIsv8X2kN"
 MODEL = "eleven_turbo_v2_5"  # supports language_code; multilingual_v2 guesses the language and mispronounces short words
 LANG = "id"
 OUT = "audio"
