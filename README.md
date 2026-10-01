@@ -14,7 +14,7 @@ Website game edukasi sederhana untuk anak usia 3–5 tahun, berbahasa Indonesia,
 | `huruf.html` | Belajar Huruf | Kenalan huruf A–Z + tantangan cari huruf |
 | `angka.html` | Belajar Angka | Berhitung 1–20 + tantangan cari angka |
 | `hewan.html` | Belajar Hewan | Kenalan 20 hewan + tantangan cari hewan |
-| `putri.html` | Dandan Putri | Cocokkan warna, baju sesuai cuaca, nama pakaian, dandan bebas |
+| `putri.html` | Dandan Princess | Cocokkan warna, baju sesuai cuaca, nama pakaian, dandan bebas |
 
 ## Fitur
 
@@ -35,7 +35,7 @@ Tidak perlu instalasi apa pun — tinggal buka `index.html` langsung di browser.
 ├── huruf.html   → game belajar huruf
 ├── angka.html   → game belajar angka
 ├── hewan.html   → game belajar hewan
-├── putri.html   → game dandan putri
+├── putri.html   → game dandan princess
 └── bgm.mp3      → musik latar
 ```
 

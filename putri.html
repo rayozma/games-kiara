@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Dandan Putri</title>
+<title>Dandan Princess</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -183,8 +183,8 @@
 <div id="screen-home" class="screen active">
   <a class="icon-btn home-top" href="index.html" aria-label="Menu Utama">🏠</a>
   <div class="home-princess" id="homePrincess"></div>
-  <h1>Dandan Putri</h1>
-  <p class="tag">Bantu Putri memilih baju yang cocok, yuk!</p>
+  <h1>Dandan Princess</h1>
+  <p class="tag">Bantu Princess memilih baju yang cocok, yuk!</p>
   <div class="home-btns">
     <button class="mode-btn m-warna" data-mode="warna">Cocokkan Warna 🎨</button>
     <button class="mode-btn m-cuaca" data-mode="cuaca">Baju Sesuai Cuaca 🌦️</button>
@@ -259,9 +259,21 @@ const ICON = {
 };
 const svgWrap = inner => `<svg viewBox="0 0 100 100" width="100%" height="100%">${inner}</svg>`;
 
+/* ---- skirt types: [princess skirt path, hem/detail lines, picker icon] ---- */
+const SKIRTS = {
+  'panjang': ['M76 146 L124 146 L160 250 Q100 262 40 250 Z', '<path d="M42 248 Q100 260 158 248"/>',
+              c => `<path d="M38 14 L62 14 L84 88 Q50 96 16 88 Z" fill="${c}" ${O}/>`],
+  'mengembang': ['M76 146 L124 146 Q168 200 164 244 Q100 264 36 244 Q32 200 76 146 Z', '<path d="M50 198 Q100 213 150 198"/><path d="M40 242 Q100 260 160 242"/>',
+              c => `<path d="M38 14 L62 14 Q94 50 90 84 Q50 98 10 84 Q6 50 38 14 Z" fill="${c}" ${O}/><path d="M18 52 Q50 62 82 52" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/>`],
+  'lipit': ['M76 146 L124 146 L148 214 Q100 224 52 214 Z', '<path d="M88 150 L77 218 M100 150 L100 222 M112 150 L123 218" stroke="rgba(0,0,0,.14)" stroke-width="2.5"/><path d="M54 212 Q100 222 146 212"/>',
+              c => `<path d="M36 18 L64 18 L80 76 Q50 84 20 76 Z" fill="${c}" ${O}/><path d="M43 20 L33 78 M50 20 L50 80 M57 20 L67 78" stroke="rgba(0,0,0,.18)" stroke-width="3"/>`],
+  'pendek': ['M76 146 L124 146 L140 192 Q100 200 60 192 Z', '<path d="M62 190 Q100 198 138 190"/>',
+              c => `<path d="M34 30 L66 30 L78 64 Q50 72 22 64 Z" fill="${c}" ${O}/>`]
+};
+
 /* ---- princess drawing ---- */
 function base(){
-  return {dress:'merah muda', skirt:null, shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
+  return {dress:'merah muda', skirt:null, skirtType:'panjang', shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
           umbrella:false, boots:false, raincoat:false, scarf:false, jacket:false};
 }
 function princessSVG(s){
@@ -270,12 +282,13 @@ function princessSVG(s){
   const dress = colorHex(s.dress), skirt = s.skirt ? colorHex(s.skirt) : dress;
   let g = '';
   g += `<path d="M62 70 Q58 36 100 32 Q142 36 138 70 L146 142 Q100 152 54 142 Z" fill="${hair}"/>`;
-  g += `<rect x="86" y="244" width="10" height="34" rx="4" fill="${skin}"/><rect x="104" y="244" width="10" height="34" rx="4" fill="${skin}"/>`;
+  g += `<rect x="86" y="184" width="10" height="94" rx="4" fill="${skin}"/><rect x="104" y="184" width="10" height="94" rx="4" fill="${skin}"/>`;
   if (s.boots) g += `<rect x="81" y="252" width="18" height="33" rx="5" fill="#FF6B6B" ${P}/><rect x="101" y="252" width="18" height="33" rx="5" fill="#FF6B6B" ${P}/>`;
   else { const sh = s.shoes ? colorHex(s.shoes) : '#FFFFFF'; g += `<ellipse cx="89" cy="280" rx="12" ry="6.5" fill="${sh}" ${P}/><ellipse cx="111" cy="280" rx="12" ry="6.5" fill="${sh}" ${P}/>`; }
   const sleeve = coat || skin;
   g += `<path d="M82 114 L64 172" stroke="${sleeve}" stroke-width="13" stroke-linecap="round"/><path d="M118 114 L136 172" stroke="${sleeve}" stroke-width="13" stroke-linecap="round"/>`;
-  g += `<path d="M76 146 L124 146 L160 250 Q100 262 40 250 Z" fill="${skirt}" ${P}/><path d="M42 248 Q100 260 158 248" stroke="#fff" stroke-width="4" fill="none" opacity=".55"/>`;
+  const sk = SKIRTS[s.skirtType] || SKIRTS.panjang;
+  g += `<path d="${sk[0]}" fill="${skirt}" ${P}/><g stroke="#fff" stroke-width="4" fill="none" opacity=".55">${sk[1]}</g>`;
   g += `<path d="M80 106 Q100 100 120 106 L124 148 L76 148 Z" fill="${dress}" ${P}/><rect x="75" y="140" width="50" height="9" rx="4" fill="#fff" opacity=".65"/>`;
   if (s.raincoat) g += `<path d="M76 104 Q100 97 124 104 L142 216 Q100 224 58 216 Z" fill="#FFD166" ${P}/><line x1="100" y1="104" x2="100" y2="220" stroke="rgba(0,0,0,.2)" stroke-width="2"/><circle cx="107" cy="130" r="3" fill="#1B3A4B"/><circle cx="107" cy="160" r="3" fill="#1B3A4B"/><circle cx="107" cy="190" r="3" fill="#1B3A4B"/>`;
   else if (s.jacket) g += `<path d="M77 104 Q100 97 123 104 L128 170 L72 170 Z" fill="#9273C9" ${P}/><line x1="100" y1="104" x2="100" y2="170" stroke="#fff" stroke-width="2.5" opacity=".7"/>`;
@@ -455,7 +468,7 @@ function roundColor(){
   setScene(null);
   const cols = shuffle([c, ...shuffle(Object.keys(COLORS).filter(x => x !== c)).slice(0, 2)]);
   renderOptions(cols.map(col => ({icon: ICON[t](COLORS[col]), ok: col === c, label: t + ' ' + col, apply: () => applyItem(state, t, col)})));
-  target = {say: `Gaun Putri warna ${c}. Cari ${t} warna ${c}!`, text: `Cari ${t} warna ${c}`, key: 'warna:' + c,
+  target = {say: `Gaun Princess warna ${c}. Cari ${t} warna ${c}!`, text: `Cari ${t} warna ${c}`, key: 'warna:' + c,
             praise: `Pintar! ${cap(t)} ${c}, sama dengan gaunnya!`};
 }
 function roundWeather(){
@@ -464,7 +477,7 @@ function roundWeather(){
   const good = pick(W.items);
   const bad = shuffle(Object.keys(WEATHER).filter(x => x !== w).flatMap(x => WEATHER[x].items)).slice(0, 2);
   renderOptions(shuffle([good, ...bad]).map(n => ({icon: ICON[n](), ok: n === good, label: n, apply: () => applyItem(state, n)})));
-  target = {say: `${W.say} Putri pakai apa ya?`, text: `${W.say} Pakai apa ya?`, key: 'cuaca:' + w,
+  target = {say: `${W.say} Princess pakai apa ya?`, text: `${W.say} Pakai apa ya?`, key: 'cuaca:' + w,
             praise: `Pintar! Pakai ${good} ${WHY_OVERRIDE[good] || W.why}.`};
 }
 function roundName(){
@@ -546,16 +559,27 @@ function buildControls(){
     sw.appendChild(b);
   });
   row.appendChild(sw); box.appendChild(row);
+  const skRow = document.createElement('div'); skRow.className = 'ctl-row';
+  skRow.innerHTML = '<div class="ctl-label">Jenis Rok</div>';
+  const skBox = document.createElement('div'); skBox.className = 'toggles';
+  Object.keys(SKIRTS).forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'toggle' + (dressState.skirtType === t ? ' active' : ''); b.setAttribute('aria-label', 'rok ' + t);
+    b.innerHTML = svgWrap(SKIRTS[t][2](colorHex(dressState.skirt || dressState.dress)));
+    b.addEventListener('click', () => { dressState.skirtType = t; drawDress(); speakText('rok ' + t); });
+    skBox.appendChild(b);
+  });
+  skRow.appendChild(skBox); box.appendChild(skRow);
 }
 
 /* ---- wiring ---- */
 document.getElementById('homePrincess').innerHTML = princessSVG(base());
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
-document.getElementById('btnDandan').addEventListener('click', () => { showScreen('dress'); drawDress(); speakText('Ayo dandani Putri!'); });
+document.getElementById('btnDandan').addEventListener('click', () => { showScreen('dress'); drawDress(); speakText('Ayo dandani Princess!'); });
 document.getElementById('btnHomePlay').addEventListener('click', goHome);
 document.getElementById('btnHomeDress').addEventListener('click', goHome);
 document.getElementById('btnReplay').addEventListener('click', () => { if (target && !locked) speakText(target.say); });
-document.getElementById('btnTwirl').addEventListener('click', () => { twirl(dressWrap); celebrate(); playCorrectSound(); speakText('Wah, Putri cantik sekali!'); });
+document.getElementById('btnTwirl').addEventListener('click', () => { twirl(dressWrap); celebrate(); playCorrectSound(); speakText('Wah, Princess cantik sekali!'); });
 
 window.addEventListener('keydown', ev => {
   const active = document.querySelector('.screen.active').id;
