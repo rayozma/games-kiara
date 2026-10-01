@@ -1,6 +1,7 @@
 import os, re, sys, json, time, getpass, urllib.request, urllib.error
 VOICE_ID = "d15jrIAARvF899pDoC6T"
-MODEL = "eleven_multilingual_v2"
+MODEL = "eleven_turbo_v2_5"  # supports language_code; multilingual_v2 guesses the language and mispronounces short words
+LANG = "id"
 OUT = "audio"
 LETTER_SAY = {"A":"a","B":"be","C":"ce","D":"de","E":"e","F":"ef","G":"ge","H":"ha","I":"i","J":"je","K":"ka","L":"el","M":"em","N":"en","O":"o","P":"pe","Q":"ki","R":"er","S":"es","T":"te","U":"u","V":"fe","W":"we","X":"eks","Y":"ye","Z":"zet"}
 HURUF = [("A","Apel"),("B","Bola"),("C","Cacing"),("D","Dokter"),("E","Elang"),("F","Film"),("G","Gajah"),("H","Harimau"),("I","Ikan"),("J","Jerapah"),("K","Kucing"),("L","Lebah"),("M","Monyet"),("N","Naga"),("O","Ombak"),("P","Pisang"),("Q","Quran"),("R","Rusa"),("S","Singa"),("T","Topi"),("U","Ular"),("V","Vitamin"),("W","Wortel"),("X","Xilofon"),("Y","Yoyo"),("Z","Zebra")]
@@ -26,7 +27,7 @@ def phrases():
         p.append((f"{say} Putri pakai apa ya?",)*2)
         for it in items: p.append((f"Pintar! Pakai {it} {WHY.get(it, why)}.",)*2)
     for n in NAMES: p += [(f"Cari {n}!",)*2, (f"Pintar! Ini {n}.",)*2]
-    for lab in ["Gaun","Sepatu","Mahkota","Tas"]: p += [(f"{lab} {c}",)*2 for c in COLORS]
+    for lab in ["Gaun","Rok","Sepatu","Mahkota","Tas"]: p += [(f"{lab} {c}",)*2 for c in COLORS]
     p += [(t, t) for t in TOGGLES] + [("Ayo dandani Putri!",)*2, ("Wah, Putri cantik sekali!",)*2]
     seen, out = set(), []
     for d, s in p:
@@ -34,15 +35,32 @@ def phrases():
     return out
 
 def tts(key, text):
-    body = json.dumps({"text": text, "model_id": MODEL, "voice_settings": {"stability": 0.55, "similarity_boost": 0.75}}).encode()
+    body = json.dumps({"text": text, "model_id": MODEL, "language_code": LANG, "voice_settings": {"stability": 0.55, "similarity_boost": 0.75}}).encode()
     req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}?output_format=mp3_44100_128", data=body, method="POST",
         headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg", "User-Agent": "games-kiara/1.0"})
     with urllib.request.urlopen(req, timeout=60) as r: return r.read()
 
+def load_key():
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key and os.path.exists(".env"):
+        for line in open(".env", encoding="utf-8-sig"):
+            k, _, v = line.partition("=")
+            if k.strip() == "ELEVENLABS_API_KEY": key = v.strip().strip("'\"")
+    key = key or getpass.getpass("Paste ElevenLabs API key (hidden): ")
+    key = "".join(c for c in key if c.isprintable()).strip()  # Ctrl+V into getpass on Windows can insert control chars
+    print(f"Using key {key[:3]}...{key[-2:]} ({len(key)} chars)")
+    if not key.startswith("sk_"): sys.exit("That is not an API key (it should start with 'sk_'). The key ID shown in the dashboard won't work.")
+    return key
+
 def main():
     test, force = "--test" in sys.argv, "--force" in sys.argv
+    only = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)
     items = [x for x in phrases() if x[0] in TEST] if test else phrases()
-    key = os.environ.get("ELEVENLABS_API_KEY") or getpass.getpass("Paste ElevenLabs API key (hidden): ").strip()
+    if only:
+        want = {slug(w) for w in only.split(",")}
+        items = [x for x in items if slug(x[0]) in want]; force = True
+        if unknown := want - {slug(x[0]) for x in items}: print("Unknown phrases:", ", ".join(sorted(unknown)))
+    key = load_key()
     os.makedirs(OUT, exist_ok=True)
     todo = [x for x in items if force or not os.path.exists(os.path.join(OUT, slug(x[0]) + ".mp3"))]
     print(f"{len(items)} phrases, {len(todo)} to generate, ~{sum(len(s) for _, s in todo)} characters")
@@ -50,8 +68,9 @@ def main():
         path = os.path.join(OUT, slug(d) + ".mp3")
         try: data = tts(key, s)
         except urllib.error.HTTPError as e:
-            print(f"ERROR {e.code} on '{d}': {e.read().decode(errors='ignore')[:300]}")
-            if e.code in (401, 402, 403, 429): sys.exit(1)
+            msg = e.read().decode(errors="ignore")[:300]
+            print(f"ERROR {e.code} on '{d}': {msg}")
+            if e.code in (401, 402, 403, 429) or "<html" in msg or "authentication_error" in msg: sys.exit("Stopping: malformed request (check the API key)." if "<html" in msg else 1)
             continue
         open(path, "wb").write(data); print(f"[{i}/{len(todo)}] {path}"); time.sleep(0.3)
     print("Done.")

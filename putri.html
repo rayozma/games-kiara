@@ -261,13 +261,13 @@ const svgWrap = inner => `<svg viewBox="0 0 100 100" width="100%" height="100%">
 
 /* ---- princess drawing ---- */
 function base(){
-  return {dress:'merah muda', shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
+  return {dress:'merah muda', skirt:null, shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
           umbrella:false, boots:false, raincoat:false, scarf:false, jacket:false};
 }
 function princessSVG(s){
   const skin = '#F6D3B3', hair = '#6B3F2A', P = 'stroke="rgba(0,0,0,.15)" stroke-width="2" stroke-linejoin="round"';
   const coat = s.raincoat ? '#FFD166' : s.jacket ? '#9273C9' : null;
-  const dress = colorHex(s.dress);
+  const dress = colorHex(s.dress), skirt = s.skirt ? colorHex(s.skirt) : dress;
   let g = '';
   g += `<path d="M62 70 Q58 36 100 32 Q142 36 138 70 L146 142 Q100 152 54 142 Z" fill="${hair}"/>`;
   g += `<rect x="86" y="244" width="10" height="34" rx="4" fill="${skin}"/><rect x="104" y="244" width="10" height="34" rx="4" fill="${skin}"/>`;
@@ -275,7 +275,7 @@ function princessSVG(s){
   else { const sh = s.shoes ? colorHex(s.shoes) : '#FFFFFF'; g += `<ellipse cx="89" cy="280" rx="12" ry="6.5" fill="${sh}" ${P}/><ellipse cx="111" cy="280" rx="12" ry="6.5" fill="${sh}" ${P}/>`; }
   const sleeve = coat || skin;
   g += `<path d="M82 114 L64 172" stroke="${sleeve}" stroke-width="13" stroke-linecap="round"/><path d="M118 114 L136 172" stroke="${sleeve}" stroke-width="13" stroke-linecap="round"/>`;
-  g += `<path d="M76 146 L124 146 L160 250 Q100 262 40 250 Z" fill="${dress}" ${P}/><path d="M42 248 Q100 260 158 248" stroke="#fff" stroke-width="4" fill="none" opacity=".55"/>`;
+  g += `<path d="M76 146 L124 146 L160 250 Q100 262 40 250 Z" fill="${skirt}" ${P}/><path d="M42 248 Q100 260 158 248" stroke="#fff" stroke-width="4" fill="none" opacity=".55"/>`;
   g += `<path d="M80 106 Q100 100 120 106 L124 148 L76 148 Z" fill="${dress}" ${P}/><rect x="75" y="140" width="50" height="9" rx="4" fill="#fff" opacity=".65"/>`;
   if (s.raincoat) g += `<path d="M76 104 Q100 97 124 104 L142 216 Q100 224 58 216 Z" fill="#FFD166" ${P}/><line x1="100" y1="104" x2="100" y2="220" stroke="rgba(0,0,0,.2)" stroke-width="2"/><circle cx="107" cy="130" r="3" fill="#1B3A4B"/><circle cx="107" cy="160" r="3" fill="#1B3A4B"/><circle cx="107" cy="190" r="3" fill="#1B3A4B"/>`;
   else if (s.jacket) g += `<path d="M77 104 Q100 97 123 104 L128 170 L72 170 Z" fill="#9273C9" ${P}/><line x1="100" y1="104" x2="100" y2="170" stroke="#fff" stroke-width="2.5" opacity=".7"/>`;
@@ -502,7 +502,7 @@ function answer(btn, o){
 /* ---- free dress-up ---- */
 let dressState = base();
 const dressWrap = document.getElementById('dressPrincess');
-const COLOR_ROWS = [{label:'Gaun', key:'dress', none:false}, {label:'Sepatu', key:'shoes', none:true}, {label:'Mahkota', key:'crown', none:true}, {label:'Tas', key:'bag', none:true}];
+const COLOR_ROWS = [{label:'Gaun', key:'dress', none:false}, {label:'Rok', key:'skirt', none:false}, {label:'Sepatu', key:'shoes', none:true}, {label:'Mahkota', key:'crown', none:true}, {label:'Tas', key:'bag', none:true}];
 const TOGGLES = [['kalung','necklace'], ['topi','hat'], ['kacamata','glasses'], ['payung','umbrella'], ['syal','scarf'], ['jaket','jacket'], ['jas hujan','raincoat'], ['sepatu bot','boots']];
 function drawDress(){ dressWrap.innerHTML = princessSVG(dressState); buildControls(); }
 function buildControls(){
@@ -519,9 +519,10 @@ function buildControls(){
     }
     Object.keys(COLORS).forEach(c => {
       const b = document.createElement('button');
-      b.className = 'swatch' + (dressState[r.key] === c ? ' active' : ''); b.style.background = COLORS[c]; b.setAttribute('aria-label', r.label + ' ' + c);
+      b.className = 'swatch' + ((r.key === 'skirt' ? dressState.skirt || dressState.dress : dressState[r.key]) === c ? ' active' : ''); b.style.background = COLORS[c]; b.setAttribute('aria-label', r.label + ' ' + c);
       b.addEventListener('click', () => {
         dressState[r.key] = c;
+        if (r.key === 'dress') dressState.skirt = null;
         if (r.key === 'shoes') dressState.boots = false;
         if (r.key === 'crown') dressState.hat = false;
         drawDress(); speakText(r.label + ' ' + c);
