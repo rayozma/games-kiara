@@ -12,6 +12,7 @@ COLORS = ["merah","biru","kuning","hijau","ungu","merah muda"]
 NAMES = ["gaun","sepatu","mahkota","tas","kalung","topi","kacamata","payung","sepatu bot","jas hujan","syal","jaket"]
 WEATHER = {"hujan":("Hari ini hujan!","supaya tidak basah",["payung","jas hujan","sepatu bot"]),"panas":("Hari ini panas sekali!","supaya tidak kepanasan",["topi","kacamata"]),"dingin":("Hari ini dingin!","supaya tetap hangat",["syal","jaket"])}
 WHY = {"kacamata":"supaya mata tidak silau"}
+TOPS = ["tanpa lengan","lengan pendek","lengan panjang","lengan balon"]
 SKIRTS = ["panjang","mengembang","lipit","pendek"]
 TOGGLES = ["kalung","topi","kacamata","payung","syal","jaket","jas hujan","sepatu bot"]
 # Spoken-text overrides for lines the voice mispronounces (display text -> what is sent to ElevenLabs)
@@ -58,7 +59,7 @@ def phrases():
         for it in items: p.append((f"Pintar! Pakai {it} {WHY.get(it, why)}.",)*2)
     for n in NAMES: p += [(f"Cari {n}!",)*2, (f"Pintar! Ini {n}.",)*2]
     for lab in ["Gaun","Rok","Sepatu","Mahkota","Tas"]: p += [(f"{lab} {c}",)*2 for c in COLORS]
-    p += [(f"rok {k}",)*2 for k in SKIRTS] + [(t, t) for t in TOGGLES] + [("Ayo dandani Princess!",)*2, ("Wah, Princess cantik sekali!",)*2]
+    p += [(f"baju {k}",)*2 for k in TOPS] + [(f"rok {k}",)*2 for k in SKIRTS] + [(t, t) for t in TOGGLES] + [("Ayo dandani Princess!",)*2, ("Wah, Princess cantik sekali!",)*2]
     seen, out = set(), []
     for d, s in p:
         if slug(d) not in seen: seen.add(slug(d)); out.append((d, SAY.get(d, s)))

@@ -271,9 +271,23 @@ const SKIRTS = {
               c => `<path d="M34 30 L66 30 L78 64 Q50 72 22 64 Z" fill="${c}" ${O}/>`]
 };
 
+/* ---- top types: [princess sleeves (drawn over the bodice), picker icon] ---- */
+const SP = 'stroke="rgba(0,0,0,.15)" stroke-width="2" stroke-linejoin="round"';
+const SLEEVE = (d, c, w) => `<path d="${d}" stroke="rgba(0,0,0,.15)" stroke-width="${w + 4}" stroke-linecap="round"/><path d="${d}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+const TANK = c => `<path d="M34 20 L44 20 Q50 30 56 20 L66 20 L70 86 L30 86 Z" fill="${c}" ${O}/>`;
+const TOPS = {
+  'tanpa lengan': [c => '', TANK],
+  'lengan pendek': [c => SLEEVE('M82 112 L77 130 M118 112 L123 130', c, 17),
+              c => `<path d="M30 20 L42 16 Q50 26 58 16 L70 20 L88 38 L76 50 L70 44 L70 86 L30 86 L30 44 L24 50 L12 38 Z" fill="${c}" ${O}/>`],
+  'lengan panjang': [c => SLEEVE('M82 114 L65 168 M118 114 L135 168', c, 15) + '<path d="M66 163 L64 169 M134 163 L136 169" stroke="#fff" stroke-width="15" opacity=".6"/>',
+              c => `<path d="M30 20 L42 16 Q50 26 58 16 L70 20 L86 82 L74 86 L70 50 L70 86 L30 86 L30 50 L26 86 L14 82 Z" fill="${c}" ${O}/>`],
+  'lengan balon': [c => `<circle cx="80" cy="113" r="11" fill="${c}" ${SP}/><circle cx="120" cy="113" r="11" fill="${c}" ${SP}/>`,
+              c => TANK(c) + `<circle cx="30" cy="30" r="13" fill="${c}" ${O}/><circle cx="70" cy="30" r="13" fill="${c}" ${O}/>`]
+};
+
 /* ---- princess drawing ---- */
 function base(){
-  return {dress:'merah muda', skirt:null, skirtType:'panjang', shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
+  return {dress:'merah muda', skirt:null, skirtType:'panjang', topType:'tanpa lengan', shoes:null, crown:'kuning', bag:null, necklace:false, hat:false, glasses:false,
           umbrella:false, boots:false, raincoat:false, scarf:false, jacket:false};
 }
 function princessSVG(s){
@@ -290,6 +304,7 @@ function princessSVG(s){
   const sk = SKIRTS[s.skirtType] || SKIRTS.panjang;
   g += `<path d="${sk[0]}" fill="${skirt}" ${P}/><g stroke="#fff" stroke-width="4" fill="none" opacity=".55">${sk[1]}</g>`;
   g += `<path d="M80 106 Q100 100 120 106 L124 148 L76 148 Z" fill="${dress}" ${P}/><rect x="75" y="140" width="50" height="9" rx="4" fill="#fff" opacity=".65"/>`;
+  if (!coat) g += (TOPS[s.topType] || TOPS['tanpa lengan'])[0](dress);
   if (s.raincoat) g += `<path d="M76 104 Q100 97 124 104 L142 216 Q100 224 58 216 Z" fill="#FFD166" ${P}/><line x1="100" y1="104" x2="100" y2="220" stroke="rgba(0,0,0,.2)" stroke-width="2"/><circle cx="107" cy="130" r="3" fill="#1B3A4B"/><circle cx="107" cy="160" r="3" fill="#1B3A4B"/><circle cx="107" cy="190" r="3" fill="#1B3A4B"/>`;
   else if (s.jacket) g += `<path d="M77 104 Q100 97 123 104 L128 170 L72 170 Z" fill="#9273C9" ${P}/><line x1="100" y1="104" x2="100" y2="170" stroke="#fff" stroke-width="2.5" opacity=".7"/>`;
   g += `<rect x="93" y="92" width="14" height="14" rx="4" fill="${skin}"/>`;
@@ -559,17 +574,21 @@ function buildControls(){
     sw.appendChild(b);
   });
   row.appendChild(sw); box.appendChild(row);
-  const skRow = document.createElement('div'); skRow.className = 'ctl-row';
-  skRow.innerHTML = '<div class="ctl-label">Jenis Rok</div>';
-  const skBox = document.createElement('div'); skBox.className = 'toggles';
-  Object.keys(SKIRTS).forEach(t => {
+  typeRow(box, 'Jenis Baju', TOPS, 'topType', 'baju', colorHex(dressState.dress));
+  typeRow(box, 'Jenis Rok', SKIRTS, 'skirtType', 'rok', colorHex(dressState.skirt || dressState.dress));
+}
+function typeRow(box, label, types, key, word, color){
+  const row = document.createElement('div'); row.className = 'ctl-row';
+  row.innerHTML = `<div class="ctl-label">${label}</div>`;
+  const tb = document.createElement('div'); tb.className = 'toggles';
+  Object.keys(types).forEach(t => {
     const b = document.createElement('button');
-    b.className = 'toggle' + (dressState.skirtType === t ? ' active' : ''); b.setAttribute('aria-label', 'rok ' + t);
-    b.innerHTML = svgWrap(SKIRTS[t][2](colorHex(dressState.skirt || dressState.dress)));
-    b.addEventListener('click', () => { dressState.skirtType = t; drawDress(); speakText('rok ' + t); });
-    skBox.appendChild(b);
+    b.className = 'toggle' + (dressState[key] === t ? ' active' : ''); b.setAttribute('aria-label', word + ' ' + t);
+    b.innerHTML = svgWrap(types[t][types[t].length - 1](color));
+    b.addEventListener('click', () => { dressState[key] = t; drawDress(); speakText(word + ' ' + t); });
+    tb.appendChild(b);
   });
-  skRow.appendChild(skBox); box.appendChild(skRow);
+  row.appendChild(tb); box.appendChild(row);
 }
 
 /* ---- wiring ---- */
