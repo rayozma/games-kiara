@@ -171,6 +171,7 @@
   .swatches{display:grid; grid-template-columns:repeat(7, minmax(0,46px)); gap:6px;}
   .swatch{width:100%; height:auto; aspect-ratio:1;}
   .toggles{display:flex; flex-wrap:wrap; gap:8px;}
+  .type-toggles{margin-bottom:10px;}
   @media (orientation: landscape) and (max-height: 520px){ .mode-btn{padding:11px 14px;} }
   @media (min-width: 700px) and (min-height: 700px){ .swatches{grid-template-columns:repeat(7, 56px); gap:10px;} .swatch{width:56px; height:56px;} .ctl-row{padding:12px 16px;} }
 </style>
@@ -530,7 +531,7 @@ function answer(btn, o){
 /* ---- free dress-up ---- */
 let dressState = base();
 const dressWrap = document.getElementById('dressPrincess');
-const COLOR_ROWS = [{label:'Gaun', key:'dress', none:false}, {label:'Rok', key:'skirt', none:false}, {label:'Sepatu', key:'shoes', none:true}, {label:'Mahkota', key:'crown', none:true}, {label:'Tas', key:'bag', none:true}];
+const COLOR_ROWS = [{label:'Gaun', key:'dress', none:false, types:[TOPS, 'topType', 'baju']}, {label:'Rok', key:'skirt', none:false, types:[SKIRTS, 'skirtType', 'rok']}, {label:'Sepatu', key:'shoes', none:true}, {label:'Mahkota', key:'crown', none:true}, {label:'Tas', key:'bag', none:true}];
 const TOGGLES = [['kalung','necklace'], ['topi','hat'], ['kacamata','glasses'], ['payung','umbrella'], ['syal','scarf'], ['jaket','jacket'], ['jas hujan','raincoat'], ['sepatu bot','boots']];
 function drawDress(){ dressWrap.innerHTML = princessSVG(dressState); buildControls(); }
 function buildControls(){
@@ -538,6 +539,7 @@ function buildControls(){
   COLOR_ROWS.forEach(r => {
     const row = document.createElement('div'); row.className = 'ctl-row';
     row.innerHTML = `<div class="ctl-label">${r.label}</div>`;
+    if (r.types) row.appendChild(typeToggles(...r.types, colorHex(dressState[r.key] || dressState.dress)));
     const sw = document.createElement('div'); sw.className = 'swatches';
     if (r.none){
       const b = document.createElement('button');
@@ -574,13 +576,9 @@ function buildControls(){
     sw.appendChild(b);
   });
   row.appendChild(sw); box.appendChild(row);
-  typeRow(box, 'Jenis Baju', TOPS, 'topType', 'baju', colorHex(dressState.dress));
-  typeRow(box, 'Jenis Rok', SKIRTS, 'skirtType', 'rok', colorHex(dressState.skirt || dressState.dress));
 }
-function typeRow(box, label, types, key, word, color){
-  const row = document.createElement('div'); row.className = 'ctl-row';
-  row.innerHTML = `<div class="ctl-label">${label}</div>`;
-  const tb = document.createElement('div'); tb.className = 'toggles';
+function typeToggles(types, key, word, color){
+  const tb = document.createElement('div'); tb.className = 'toggles type-toggles';
   Object.keys(types).forEach(t => {
     const b = document.createElement('button');
     b.className = 'toggle' + (dressState[key] === t ? ' active' : ''); b.setAttribute('aria-label', word + ' ' + t);
@@ -588,7 +586,7 @@ function typeRow(box, label, types, key, word, color){
     b.addEventListener('click', () => { dressState[key] = t; drawDress(); speakText(word + ' ' + t); });
     tb.appendChild(b);
   });
-  row.appendChild(tb); box.appendChild(row);
+  return tb;
 }
 
 /* ---- wiring ---- */
